@@ -45,10 +45,13 @@ for bin in awww awww-daemon toggle-darkmode hyprshutdown; do
 done
 
 # ── fonts ──────────────────────────────────────────────────────────────
+# Captured into a variable first: `fc-list | grep -q` under pipefail reports a false
+# MISMATCH — grep -q exits at the first hit, fc-list dies of SIGPIPE, pipeline "fails".
 echo "==> fonts"
 if command -v fc-list >/dev/null 2>&1; then
-    fc-list | grep -qi 'JetBrainsMono Nerd' && ok "JetBrainsMono Nerd Font" || bad "JetBrainsMono Nerd Font"
-    fc-list | grep -qi ':Inter'             && ok "Inter"                    || bad "Inter"
+    fonts="$(fc-list)"
+    grep -qi 'JetBrainsMono Nerd' <<< "$fonts" && ok "JetBrainsMono Nerd Font" || bad "JetBrainsMono Nerd Font"
+    grep -qi ': Inter'            <<< "$fonts" && ok "Inter"                    || bad "Inter"
 else
     bad "fc-list missing (fontconfig)"
 fi
@@ -80,8 +83,11 @@ fi
 # Read-only sanity check. This repo never touches these; if one is down, that is
 # news worth having before you blame something else.
 echo "==> service stack (untouched by this repo — checked, never modified)"
-for unit in navidrome slskd jellyfin-server; do
-    if systemctl list-unit-files --type=service 2>/dev/null | grep -q "^${unit}\.service"; then
+# Same SIGPIPE-under-pipefail trap as the fonts check: capture, then grep.
+units="$(systemctl list-unit-files --type=service 2>/dev/null || true)"
+# Package is jellyfin-server, but the unit it ships is plain jellyfin.service.
+for unit in navidrome slskd jellyfin; do
+    if grep -q "^${unit}\.service" <<< "$units"; then
         state="$(systemctl is-active "${unit}.service" 2>/dev/null || true)"
         [[ "$state" == "active" ]] && ok "$unit: active" || note "$unit: $state"
     else
