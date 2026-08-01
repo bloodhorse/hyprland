@@ -1,6 +1,0 @@
-font-size = 30
-theme = Solarized Dark
-keybind = ctrl+c=copy_to_clipboard
-keybind = ctrl+v=paste_from_clipboard
-keybind = alt+c=text:\x03
-keybind = ctrl+t=new_tab

@@ -1,157 +1,104 @@
-# клавиатурный пайплайн — как всё работает
+# hyprland-terraforming
 
-## железо
+Terraforming a macOS-shaped Hyprland environment onto **miniarch** — an Intel Mac mini 2018
+(i5-8500B, UHD 630) that already runs Arch on the linux-t2 kernel.
 
-| устройство | что это |
+The goal is a full functional transfer of the mac: terminal, editor, hotkeys, window
+management, packages. Not a clone of the look — a transfer of the *habits*. This machine is
+for bekh + Claude projects only: rest and creativity. **No work on it** — no profi repos, no
+VPN, no DBA tooling.
+
+## Hard constraints
+
+Two of them, and both are the kind that end a project rather than annoy it.
+
+**1. It is a live server.** navidrome, slskd and jellyfin-server run on it right now.
+Nothing here may stop, reconfigure, or uninstall any part of that. Every script is written
+to be re-runnable on a machine that is already doing its job.
+
+**2. It is a T2 Mac.** It boots `linux-t2` with `apple-bcm-firmware`, `t2fanrd` and
+`apple-t2-audio-config`. Nothing in this repo installs, replaces, or upgrades a kernel,
+bootloader or firmware package, and no script runs `pacman -Syu`. `00-packages.sh` has a
+hard refuse-list for exactly those names. Wi-Fi, fans and audio all hang off that stack.
+
+Working in our favour: root is btrfs on nvme with **snapper + snap-pac**, so every pacman
+transaction gets an automatic pre/post snapshot. There is a rollback.
+
+## Status
+
+Skeleton stage, machine still **headless** — no monitor attached yet. Everything so far is
+prep that can be done over ssh. What is real:
+
+- `configs/` — carried over from betrayer (the dead laptop). Machine-specific junk stripped;
+  the monitor section is a TODO until the Dell is plugged in and identified.
+- `packages/` — first honest pass at what the configs actually need. Most of it is already
+  installed; per the 2026-08-01 inventory the only real gaps were **fuzzel** and **keyd**.
+  Hyprland on the box is 0.55.4, kitty 0.48.
+- `scripts/` + `setup.sh` — provisioning runner, not yet run against the mini.
+- Keybinds in `configs/hypr/hyprland.conf` are **kanata-era** and await reconciliation
+  against `docs/mac-hotkeys.md` (the mac's AeroSpace/Karabiner semantics, extracted
+  separately). They are prior art, not the spec.
+- keyd config itself still lives in the `hypr-keys` repo. `scripts/02-keyd.sh` only points
+  at it.
+- **The layout changed.** bekh types **Gallium (Colstag)** now; Colemak-DH was betrayer. The
+  `code:`-based binds survive untouched — they map physical keycodes — but every
+  Colemak-derived *mnemonic* is stale, and the keyd `[main]` table is a template to rewrite
+  rather than a drop-in. That also puts `nvim`, `zed` and `tridactyl` (all built on the MNEI
+  quartet) in the **needs re-derivation** bucket, not the blessed-carry-over one. Details
+  and the open question — where Gallium actually lives — in `docs/keyboard-pipeline.md`.
+
+### Expiry date on the config format
+
+Hyprland 0.56.0 landed with no breaking changes from 0.55, but **0.56.1 adds a deprecation
+notice for `.conf` configs** — upstream is migrating to Lua. Nothing to do today; we build
+`.conf` because that is what runs. Just know that a migration is on the horizon and do not
+invest in clever `.conf` metaprogramming that will have to be thrown away.
+
+## Layout
+
+```
+configs/       dotfiles, one directory per target under ~/.config
+packages/      *.lst — one package per line, # comments, pacman -S --needed consumable
+scripts/       numbered, idempotent provisioning steps
+setup.sh       runs scripts/ in order
+docs/          the knowledge that is not a config file
+```
+
+`docs/`:
+
+- `keyboard-pipeline.md` — how a keypress travels from the Lily58 to a Hyprland action.
+- `lessons.md` — Hyprland/keyd pain already paid for. Read before debugging.
+- `postponed.md` — dashboard/panel work, where the artifacts live.
+- `kanata-era/` — the retired kanata config, kept as historical reference.
+- `mac-hotkeys.md` — the mac-side hotkey spec the binds get reconciled against.
+
+## How setup.sh works
+
+```bash
+./setup.sh          # prints the plan, asks, then runs scripts/ in order
+./setup.sh --dry-run  # prints the plan and exits
+```
+
+It executes every `scripts/NN-*.sh` in filename order and stops at the first failure. Each
+script is independently runnable and safe to re-run:
+
+| script | does |
 |---|---|
-| Lily58 Pro | сплит-клавиатура, ZMK, Bluetooth, основная |
-| AT Translated Set 2 | встроенная клавиатура Razer Blade Stealth 13 |
-| CompX 2.4G Wireless Receiver | беспроводной ресивер |
-| Logitech M720 Triathlon | мышь |
+| `00-packages.sh` | `pacman -S --needed` from `packages/*.lst`; AUR entries are printed, never auto-installed |
+| `01-configs.sh` | symlinks `configs/*` into `~/.config`; backs up any existing real file to `*.bak.<ts>` |
+| `02-keyd.sh` | stub — prints where the keyd config lives and what to do with it |
+| `99-verify.sh` | read-only; prints ✓ / ✗ MISMATCH per package and binary |
 
-## что шлёт Lily58 (ZMK прошивка)
+No script installs an AUR helper, touches systemd units it did not create, or deletes user
+data.
 
-- обычные клавиши → стандартные evdev-коды (QWERTY-позиции)
-- XF86Launch6 → переключить на English
-- XF86Launch7 → переключить на Русский
-- F17 → копировать (через kanata → Ctrl+C)
-- F18 → вставить (через kanata → Ctrl+V)
+## Decisions already made
 
-## уровень 1: kanata (evdev → evdev)
+Settled in `../TRIAGE.md`, recorded here so nobody re-litigates them:
 
-сервис: `kanata.service` (systemd, system-level)
-конфиг: `~/.config/kanata/kanata.kbd`
-
-```
-(defcfg
-  process-unmapped-keys yes
-  log-layer-changes no
-)
-
-(defsrc f15 f16 f17 f18)
-
-(deflayer default
-  f15 f16 @cpy @pst
-)
-
-(defalias
-  cpy (multi lctl c)
-  pst (multi lctl b)
-)
-```
-
-kanata работает на уровне evdev — **до** XKB. имена клавиш в конфиге
-соответствуют QWERTY-позициям, не Colemak-DH. поэтому для paste нужен
-`lctl b`, а не `lctl v`:
-
-| kanata шлёт | evdev-код | XKB Colemak-DH делает | результат |
-|---|---|---|---|
-| `lctl c` | KEY_C | → 'c' | Ctrl+C (copy) |
-| `lctl b` | KEY_B | → 'v' | Ctrl+V (paste) |
-| `lctl v` | KEY_V | → 'd' | Ctrl+D (неправильно!) |
-
-F15/F16 проходят сквозь kanata без изменений — их ловит Hyprland.
-
-## уровень 2: Hyprland XKB (evdev → keysym)
-
-конфиг: `~/.config/hypr/hyprland.conf`
-
-```
-input {
-  kb_layout = us,ru
-  kb_variant = colemak_dh_ortho,
-  kb_options =
-}
-```
-
-- layout 0 (English): Colemak-DH Ortho
-- layout 1 (Русский): стандартная ЙЦУКЕН
-
-XKB ремапит evdev-коды в keysym'ы. Colemak-DH реализован здесь,
-а не в kanata — так русская раскладка остаётся чистой ЙЦУКЕН.
-
-## уровень 3: Hyprland binds (переключение раскладки)
-
-```
-bind = , XF86Launch6, exec, hyprctl switchxkblayout all 0  # English
-bind = , XF86Launch7, exec, hyprctl switchxkblayout all 1  # Русский
-```
-
-переключение детерминированное — конкретная клавиша = конкретная раскладка,
-не toggle. XF86Launch6/7 приходят напрямую с Lily58, kanata их пропускает.
-
-## уровень 4: Hyprland keybinds (тайлинг)
-
-все бинды через `code:` (XKB keycode = evdev + 8), поэтому работают
-одинаково на **EN и RU** раскладках.
-
-```
-# Физ. QWERTY:  q  w  e  r  t    y  u  i  o  p
-# Colemak-DH:   q  w  f  p  b    j  l  u  y  ;
-# XKB keycode: 24 25 26 27 28   29 30 31 32 33
-#
-# Физ. QWERTY:  a  s  d  f  g    h  j  k  l  ;
-# Colemak-DH:   a  r  s  t  g    m  n  e  i  o
-# XKB keycode: 38 39 40 41 42   43 44 45 46 47
-#
-# Физ. QWERTY:  z  x  c  v  b    n  m
-# Colemak-DH:   z  x  c  d  v    k  h
-# XKB keycode: 52 53 54 55 56   57 58
-```
-
-### управление окнами
-
-| комбо | физ. клавиша (QWERTY) | Colemak-DH | действие |
-|---|---|---|---|
-| Super + code:24 | Q | Q | закрыть окно |
-| Super + code:25 | W | W | терминал |
-| Super + code:26 | E | **F** | фуллскрин |
-| Super + code:27 | R | **P** | pseudo-tile |
-| Super + code:39 | S | **R** | лаунчер |
-| Super + code:40 | D | **S** | скрэтчпад |
-| Super + code:41 | F | **T** | toggle split |
-| Super + code:56 | B | **V** | плавающее окно |
-| Super+Shift + code:24 | Q | Q | выход из Hyprland |
-| Alt + Space | — | — | лаунчер (альт.) |
-
-### навигация MNEI (физ. HJKL)
-
-| модификатор | M (code:43) | N (code:44) | E (code:45) | I (code:46) |
-|---|---|---|---|---|
-| Super | фокус влево | фокус вниз | фокус вверх | фокус вправо |
-| Super+Shift | двинуть влево | двинуть вниз | двинуть вверх | двинуть вправо |
-| Super+Ctrl | ресайз ← | ресайз ↓ | ресайз ↑ | ресайз → |
-
-стрелки тоже работают как фоллбэк (Super + ←↓↑→).
-
-### воркспейсы
-
-- Super + 1-0 → переключить воркспейс (code:10–19)
-- Super + Shift + 1-0 → переместить окно в воркспейс
-- Super + scroll → листать воркспейсы
-
-### мышь
-
-- Super + ЛКМ → перетаскивание окна
-- Super + ПКМ → ресайз окна
-
-## полный пайплайн
-
-```
-Lily58 (ZMK)
-│
-├─ обычные клавиши → evdev → kanata (pass) → XKB → приложение
-│
-├─ F17 → evdev → kanata → Ctrl+KEY_C → XKB → Ctrl+C (copy)
-├─ F18 → evdev → kanata → Ctrl+KEY_B → XKB → Ctrl+V (paste)
-│
-├─ XF86Launch6 → evdev → kanata (pass) → Hyprland → layout 0 (EN)
-├─ XF86Launch7 → evdev → kanata (pass) → Hyprland → layout 1 (RU)
-│
-└─ Super+code:XX → Hyprland bind → тайлинг (layout-independent)
-```
-
-## мёртвые компоненты
-
-- **Toshy** — установлен в `~/.config/toshy/`, все сервисы отключены. не участвует.
-- **X11 XKB** (`/etc/X11/xorg.conf.d/00-keyboard.conf`) — на Wayland не используется.
+- **Keyboard: keyd.** kanata is history — see `docs/kanata-era/`.
+- **Terminal: kitty.** The ghostty config was discarded.
+- **Launcher: fuzzel.** `configs/rofi/config.rasi` survives as a *theme reference only* — it
+  was polished but never even wired to a bind, and fuzzel won the pick.
+- **Bar: never.** bekh has never used one. Permanently out of scope.
+- **Dashboard: postponed.** See `docs/postponed.md`.

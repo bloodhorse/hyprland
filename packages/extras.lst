@@ -1,0 +1,17 @@
+# extras.lst — quality of life. Not required for Hyprland to come up.
+#
+# Lines tagged [AUR] go through yay (already installed on miniarch as yay-bin).
+# 00-packages.sh will NOT bootstrap an AUR helper if one is missing — it prints the
+# names and moves on.
+
+# ── browser ────────────────────────────────────────────────────────────
+zen-browser-bin       # [AUR] bound to Alt+Z in hyprland.conf; already installed
+tridactyl-native      # [AUR] native messenger — tridactylrc's :native commands need it
+
+# ── shell ──────────────────────────────────────────────────────────────
+zoxide                # bash/.bashrc calls `zoxide init bash` — bashrc errors out without it
+fzf
+starship              # the init line in .bashrc is commented out; here for when it isn't
+
+# ── audio control ──────────────────────────────────────────────────────
+pavucontrol           # the `vol` alias in .bashrc

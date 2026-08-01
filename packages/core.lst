@@ -1,0 +1,54 @@
+# core.lst — everything the KEEP configs actually reference, nothing else.
+# One package per line. Consumed by scripts/00-packages.sh via pacman -S --needed.
+# Lines tagged [AUR] go through yay instead.
+#
+# Most of this is ALREADY INSTALLED on miniarch — --needed makes those no-ops.
+# As of the 2026-08-01 inventory the only real gaps were `fuzzel` and `keyd`.
+#
+# NOTHING kernel-, bootloader- or firmware-shaped belongs in this file. miniarch is a
+# T2 Mac and boots linux-t2 + apple-bcm-firmware + t2fanrd; replacing any of that turns
+# a desktop project into a bricked machine.
+
+# ── compositor + session ───────────────────────────────────────────────
+hyprland
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+# NOTE: xdg-desktop-portal-wlr must NOT be installed alongside the hyprland
+# backend — they race for the same D-Bus interfaces. See docs/lessons.md.
+qt5-wayland
+qt6-wayland
+
+# ── terminal + launcher (TRIAGE decisions 6 and 7) ─────────────────────
+kitty
+fuzzel                # GAP: not installed on miniarch as of the inventory
+
+# ── keyboard layer (TRIAGE decision 1) ─────────────────────────────────
+keyd                  # GAP: not installed on miniarch as of the inventory
+# Do NOT install kanata — it fights keyd over /dev/input/event*.
+
+# ── clipboard ──────────────────────────────────────────────────────────
+wl-clipboard          # wl-copy / wl-paste; the cliphist listener in exec-once needs it
+cliphist
+wtype                 # synthesises keystrokes for the F15/F16 and mouse-button binds
+
+# ── audio ──────────────────────────────────────────────────────────────
+pipewire
+pipewire-pulse
+wireplumber           # provides wpctl, bound to the mute keys
+playerctl             # bound to the XF86Audio media keys
+
+# ── screen ─────────────────────────────────────────────────────────────
+hyprsunset            # night light, bound to Super+N
+awww                  # [AUR] wallpaper daemon — the exec-once line; already installed
+grim                  # screenshots; no bind wired yet, but a mac transfer without them is a lie
+slurp                 # region select for grim
+
+# ── notifications ──────────────────────────────────────────────────────
+swaync                # also the namespace the blur layerrules match
+# Not optional: some apps block forever waiting on a notification service.
+# Already installed on miniarch. It arrived with the bar-era stack that lost, so it
+# reads like a cleanup candidate — it isn't. Keeping it is a deliberate decision.
+
+# ── editor + shell utilities ───────────────────────────────────────────
+neovim
+jq

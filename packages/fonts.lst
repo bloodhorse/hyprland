@@ -1,0 +1,7 @@
+# fonts.lst — the macOS-feel font stack. See the fontconfig recipe in docs/lessons.md.
+# Run `fc-cache -fv` after installing.
+
+ttf-jetbrains-mono-nerd   # kitty.conf sets font_family = JetBrainsMono Nerd Font; also carries the glyphs
+inter-font                # the legal SF Pro stand-in — default sans-serif in the fontconfig recipe
+noto-fonts                # serif + fallback coverage
+noto-fonts-emoji
