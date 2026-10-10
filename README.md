@@ -41,8 +41,8 @@ this repo, and `/etc/keyd/default.conf` is a copy of `configs/keyd/default.conf`
 - Russian input is broken under keyd and parked.
 
 Four older repos were folded in or retired on 2026-10-10 and have no local copies:
-`hypr-keys`, `mac-bin`, `ags-dashboard`, `quickshell-bar` (all archived under
-`bloodhorse/` on GitHub). The two `hypr-keys` documents still worth reading live in
+`hypr-keys`, `ags-dashboard`, `quickshell-bar` (archived under `bloodhorse/` on GitHub) and the stale
+clone of `mac-bin` (that repo is alive: it is the mac's `~/bin`). The two `hypr-keys` documents worth reading live in
 `docs/keyd-era-v1/`; any other path here that names one of the four points at its archive.
 
 ## Layout
