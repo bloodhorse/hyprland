@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 import json
+import os
 import subprocess
+import time
+
+THEME = os.path.expanduser("~/.config/rofi/winswitch.rasi")
+SKIP = {"dropterm"}
 
 
 def hyprctl_json(cmd):
@@ -8,19 +13,64 @@ def hyprctl_json(cmd):
     return json.loads(out) if out.strip() else []
 
 
+def dispatch(*args):
+    subprocess.run(["hyprctl", "dispatch", *args], capture_output=True)
+
+
+def windows():
+    wins = [c for c in hyprctl_json("clients")
+            if c.get("mapped", True) and c.get("class") and c["class"] not in SKIP]
+    wins.sort(key=lambda c: c.get("focusHistoryID", 0))
+    if len(wins) > 1 and wins[0].get("focusHistoryID") == 0:
+        wins = wins[1:] + wins[:1]
+    return wins[:9]
+
+
+def rofi(wins):
+    rows = []
+    for i, c in enumerate(wins):
+        text = f"{i + 1}   {c['class']}   {c['title'][:70]}   ·  {c['workspace']['name']}"
+        rows.append(f"{text}\0icon\x1f{c['class'].lower()}")
+    cmd = ["rofi", "-dmenu", "-i", "-format", "i", "-no-custom", "-show-icons",
+           "-theme", THEME, "-selected-row", "0",
+           "-kb-element-next", "", "-kb-element-prev", "", "-kb-mode-next", "Shift+Right",
+           "-kb-row-down", "Down,Tab,Alt+Tab,Control+n",
+           "-kb-row-up", "Up,ISO_Left_Tab,Alt+ISO_Left_Tab,Control+p"]
+    for n in range(1, 10):
+        cmd += [f"-kb-custom-{n}", str(n), f"-kb-custom-{n + 9}", f"Control+{n}"]
+    r = subprocess.run(cmd, input="\n".join(rows), capture_output=True, text=True)
+    return r.returncode, r.stdout.strip()
+
+
 def main():
-    clients = [c for c in hyprctl_json("clients") if c.get("mapped", True) and c.get("class")]
-    if not clients:
-        return
-    clients.sort(key=lambda c: c.get("focusHistoryID", 0))
-    if len(clients) > 1:
-        clients = clients[1:] + clients[:1]
-    lines = [f"{c['class']}  ·  {c['title']}  ·  ws {c['workspace']['name']}" for c in clients]
-    pick = subprocess.run(["fuzzel", "--dmenu", "--index", "-p", "win "],
-                          input="\n".join(lines), capture_output=True, text=True).stdout.strip()
-    if not pick.isdigit():
-        return
-    subprocess.run(["hyprctl", "dispatch", "focuswindow", f"address:{clients[int(pick)]['address']}"])
+    dispatch("submap", "picker")
+    try:
+        while True:
+            wins = windows()
+            if not wins:
+                return
+            code, out = rofi(wins)
+            if code == 0 and out.isdigit():
+                idx = int(out)
+            elif 10 <= code <= 18:
+                idx = code - 10
+            elif 19 <= code <= 27:
+                idx = code - 19
+                if idx < len(wins):
+                    addr = wins[idx]["address"]
+                    dispatch("closewindow", f"address:{addr}")
+                    for _ in range(20):
+                        time.sleep(0.05)
+                        if all(c["address"] != addr for c in hyprctl_json("clients")):
+                            break
+                continue
+            else:
+                return
+            if idx < len(wins):
+                dispatch("focuswindow", f"address:{wins[idx]['address']}")
+            return
+    finally:
+        dispatch("submap", "reset")
 
 
 if __name__ == "__main__":

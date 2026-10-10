@@ -1,0 +1,4 @@
+#!/bin/sh
+sel=$(cliphist list | fuzzel --dmenu --with-nth=2 -p "clip  " --width 72 --lines 14 \
+    --border-color=89dcebff --prompt-color=89dcebff --match-color=89dcebff --selection-match-color=89dcebff)
+[ -n "$sel" ] && printf '%s' "$sel" | cliphist decode | wl-copy

@@ -1,0 +1,9 @@
+#!/bin/sh
+shader="$HOME/.config/hypr/black.frag"
+hyprctl dispatch dpms on >/dev/null
+cur=$(hyprctl getoption decoration:screen_shader -j | jq -r '.str')
+if [ "$cur" = "$shader" ]; then
+    hyprctl --batch "keyword decoration:screen_shader [[EMPTY]] ; keyword cursor:invisible false" >/dev/null
+else
+    hyprctl --batch "keyword decoration:screen_shader $shader ; keyword cursor:invisible true" >/dev/null
+fi
