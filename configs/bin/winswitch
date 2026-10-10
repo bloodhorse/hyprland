@@ -34,7 +34,7 @@ def rofi(wins):
     for i, c in enumerate(wins):
         text = f"{i + 1}   {c['class']}   {c['title'][:70]}   ·  {c['workspace']['name']}"
         rows.append(f"{text}\0icon\x1f{c['class'].lower()}")
-    cmd = ["rofi", "-dmenu", "-i", "-format", "i", "-no-custom", "-show-icons",
+    cmd = ["rofi", "-no-config", "-dmenu", "-i", "-format", "i", "-no-custom", "-show-icons",
            "-theme", RASI + ("forcequit.rasi" if KILL else "winswitch.rasi"), "-selected-row", "0",
            "-kb-element-next", "", "-kb-element-prev", "", "-kb-mode-next", "Shift+Right",
            "-kb-row-down", "Down,Tab,Alt+Tab,Control+n",
