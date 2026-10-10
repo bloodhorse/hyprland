@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 import json
 import os
+import signal
 import subprocess
+import sys
 import time
 
-THEME = os.path.expanduser("~/.config/rofi/winswitch.rasi")
+RASI = os.path.expanduser("~/.config/rofi/")
 SKIP = {"dropterm"}
+KILL = "--kill" in sys.argv
 
 
 def hyprctl_json(cmd):
@@ -21,7 +24,7 @@ def windows():
     wins = [c for c in hyprctl_json("clients")
             if c.get("mapped", True) and c.get("class") and c["class"] not in SKIP]
     wins.sort(key=lambda c: c.get("focusHistoryID", 0))
-    if len(wins) > 1 and wins[0].get("focusHistoryID") == 0:
+    if not KILL and len(wins) > 1 and wins[0].get("focusHistoryID") == 0:
         wins = wins[1:] + wins[:1]
     return wins[:9]
 
@@ -32,17 +35,33 @@ def rofi(wins):
         text = f"{i + 1}   {c['class']}   {c['title'][:70]}   ·  {c['workspace']['name']}"
         rows.append(f"{text}\0icon\x1f{c['class'].lower()}")
     cmd = ["rofi", "-dmenu", "-i", "-format", "i", "-no-custom", "-show-icons",
-           "-theme", THEME, "-selected-row", "0",
+           "-theme", RASI + ("forcequit.rasi" if KILL else "winswitch.rasi"), "-selected-row", "0",
            "-kb-element-next", "", "-kb-element-prev", "", "-kb-mode-next", "Shift+Right",
            "-kb-row-down", "Down,Tab,Alt+Tab,Control+n",
            "-kb-row-up", "Up,ISO_Left_Tab,Alt+ISO_Left_Tab,Control+p"]
+    if KILL:
+        cmd += ["-mesg", "force quit  ·  enter or digit kills  ·  esc leaves"]
     for n in range(1, 10):
         cmd += [f"-kb-custom-{n}", str(n), f"-kb-custom-{n + 9}", f"Control+{n}"]
     r = subprocess.run(cmd, input="\n".join(rows), capture_output=True, text=True)
     return r.returncode, r.stdout.strip()
 
 
+def gone(addr):
+    for _ in range(20):
+        time.sleep(0.05)
+        if all(c["address"] != addr for c in hyprctl_json("clients")):
+            return
+
+
 def main():
+    # A truly fullscreen window hides every panel that is not on the overlay layer, and
+    # rofi cannot ask for that layer. Demote it to maximized for as long as the panel is
+    # up (the app itself still believes it is fullscreen) and put it back afterwards.
+    active = hyprctl_json("activewindow") or {}
+    demoted = active if active.get("fullscreen") == 2 else None
+    if demoted:
+        dispatch("fullscreenstate", "1", "2", f"address:{demoted['address']}")
     dispatch("submap", "picker")
     try:
         while True:
@@ -57,20 +76,32 @@ def main():
             elif 19 <= code <= 27:
                 idx = code - 19
                 if idx < len(wins):
-                    addr = wins[idx]["address"]
-                    dispatch("closewindow", f"address:{addr}")
-                    for _ in range(20):
-                        time.sleep(0.05)
-                        if all(c["address"] != addr for c in hyprctl_json("clients")):
-                            break
+                    dispatch("closewindow", f"address:{wins[idx]['address']}")
+                    gone(wins[idx]["address"])
                 continue
             else:
                 return
-            if idx < len(wins):
-                dispatch("focuswindow", f"address:{wins[idx]['address']}")
+            if idx >= len(wins):
+                continue
+            if KILL:
+                try:
+                    os.kill(wins[idx]["pid"], signal.SIGKILL)
+                except OSError:
+                    pass
+                gone(wins[idx]["address"])
+                continue
+            dispatch("focuswindow", f"address:{wins[idx]['address']}")
             return
     finally:
         dispatch("submap", "reset")
+        if demoted:
+            clients = {c["address"]: c for c in hyprctl_json("clients")}
+            now = hyprctl_json("activewindow") or {}
+            game = clients.get(demoted["address"])
+            same_ws_other = (now.get("address") != demoted["address"]
+                             and now.get("workspace", {}).get("id") == demoted["workspace"]["id"])
+            if game and not same_ws_other:
+                dispatch("fullscreenstate", "2", "2", f"address:{demoted['address']}")
 
 
 if __name__ == "__main__":
