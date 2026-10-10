@@ -1,0 +1,9 @@
+#!/bin/sh
+win=$(hyprctl activewindow -j)
+addr=$(printf '%s' "$win" | jq -r '.address // empty')
+[ -z "$addr" ] && exit 0
+case "$(printf '%s' "$win" | jq -r '.class')" in
+    zen*|firefox*|glide*|librewolf*) mod=ALT ;;
+    *) mod=CTRL ;;
+esac
+hyprctl dispatch sendshortcut "$mod,$1,address:$addr" >/dev/null
