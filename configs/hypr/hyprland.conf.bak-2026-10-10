@@ -1,0 +1,474 @@
+# hyprland.conf — miniarch (Intel Mac mini 2018, UHD 630)
+#
+# Carried over from betrayer (dead laptop). Laptop-specific blocks have been stripped;
+# what is left is either verified taste or a marked TODO.
+# Repo: hyprland-terraforming. Docs: docs/keyboard-pipeline.md, docs/lessons.md.
+
+
+################
+### MONITORS ###
+################
+
+# The Dell, verified over ssh 2026-08-01: card0-DP-2 connected, native 2560x1440.
+# Scale 1.667 (≈5/3, logical 1536x864) is DELIBERATE — bekh's tuned choice from the
+# betrayer era on this panel class. 1.6 was tried in theory (matches macOS's
+# looks-like-1600x900) but bekh remembers it fucking up the view — do not "optimize"
+# this back to 1.6, the eyes have already voted. Hyprland rounds 1.667 to exact 5/3.
+monitor = DP-2, 2560x1440@60, 0x0, 1.667
+
+
+###################
+### MY PROGRAMS ###
+###################
+
+$terminal = kitty
+$menu = fuzzel
+# TODO: $fileManager is unset — nothing is bound to it yet. dolphin dragged half of KDE
+# in on betrayer; pick something lighter (or nothing) when a bind actually needs it.
+
+
+#################
+### AUTOSTART ###
+#################
+
+# Wallpaper stash rsynced from the mac's wallpeps folder (12 files in ~/Pictures/
+# Wallpapers). Default pick: the 4K one, closest kin to the dead wall_anime_4K.
+# Swap by pointing awww at any sibling file — no restart needed.
+exec-once = awww-daemon && awww img ~/Pictures/Wallpapers/a_woman_sitting_on_a_couch_looking_out_a_window.png
+
+exec-once = wl-paste --watch cliphist store
+
+# Without this, D-Bus starts xdg-desktop-portal with no WAYLAND_DISPLAY and both screen
+# sharing and the file picker die quietly. See docs/lessons.md.
+exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+
+
+#############################
+### ENVIRONMENT VARIABLES ###
+#############################
+
+# See https://wiki.hypr.land/Configuring/Environment-variables/
+
+env = XCURSOR_SIZE,24
+env = HYPRCURSOR_SIZE,24
+env = XCURSOR_THEME,Bibata-Modern-Classic
+env = HYPRCURSOR_THEME,Bibata-Modern-Classic
+env = GTK_THEME,catppuccin-mocha-mauve-standard+default
+env = FREETYPE_PROPERTIES,cff:no-stem-darkening=0 autofitter:no-stem-darkening=0 truetype:interpreter-version=40
+env = MOZ_WAYLAND_USE_VAAPI,1
+env = MOZ_DMA_BUF,1
+# Older Electron builds fall back to XWayland without this — blurry text on a scaled
+# display, broken clipboard. See docs/lessons.md.
+env = ELECTRON_OZONE_PLATFORM_HINT,auto
+
+
+#####################
+### LOOK AND FEEL ###
+#####################
+
+# Refer to https://wiki.hypr.land/Configuring/Variables/
+
+# https://wiki.hypr.land/Configuring/Variables/#general
+general {
+    gaps_in = 2
+    gaps_out = 8
+
+    border_size = 2
+
+    # https://wiki.hypr.land/Configuring/Variables/#variable-types for info about colors
+    col.active_border = rgba(cba6f7ee) rgba(89b4faee) 45deg
+    col.inactive_border = rgba(313244aa)
+
+    # Set to true enable resizing windows by clicking and dragging on borders and gaps
+    resize_on_border = false
+
+    # Please see https://wiki.hypr.land/Configuring/Tearing/ before you turn this on
+    allow_tearing = false
+
+    layout = dwindle
+}
+
+# https://wiki.hypr.land/Configuring/Variables/#decoration
+decoration {
+    rounding = 12
+    rounding_power = 2
+
+    active_opacity = 1.0
+    inactive_opacity = 0.70
+    dim_inactive = true
+    dim_strength = 0.1
+
+    shadow {
+        enabled = true
+        range = 20
+        render_power = 3
+        color = rgba(1a1a2eee)
+    }
+
+    blur {
+        enabled = true
+        size = 10
+        passes = 4
+        new_optimizations = true
+        xray = false
+
+        vibrancy = 0.3
+        noise = 0.02
+    }
+}
+
+# https://wiki.hypr.land/Configuring/Variables/#animations
+animations {
+    enabled = yes
+
+    # Curves
+    bezier = smoothOut,    0.36, 0,    0.66, -0.56
+    bezier = smoothIn,     0.25, 1,    0.5,  1
+    bezier = overshot,     0.05, 0.9,  0.1,  1.05
+    bezier = juice,        0.13, 0.99, 0.29, 1.1
+    bezier = bounce,       0.05, 0.7,  0.1,  1.04
+    bezier = silk,         0.2,  0.8,  0.2,  1
+    bezier = linear,       0,    0,    1,    1
+
+    # Animations
+    animation = global,        1,     3.5,   silk
+    animation = border,        1,     3.5,   silk
+    # borderangle+loop redraws every frame forever, even on a fully idle desktop.
+    # Kept because bekh likes it — but it is the first line to kill if the UHD 630
+    # runs hot or animations start stuttering. docs/lessons.md.
+    animation = borderangle,   1,     30,    linear,   loop
+    animation = windows,       1,     3.5,   juice
+    animation = windowsIn,     1,     3.5,   juice,    popin 80%
+    animation = windowsOut,    1,     2,     smoothOut, popin 80%
+    animation = fadeIn,        1,     3,     smoothIn
+    animation = fadeOut,       1,     2,     smoothOut
+    animation = fade,          1,     3,     silk
+    animation = layers,        1,     3,     juice
+    animation = layersIn,      1,     3,     juice,    fade
+    animation = layersOut,     1,     1.5,   smoothOut, fade
+    animation = fadeLayersIn,  1,     3,     smoothIn
+    animation = fadeLayersOut, 1,     1.5,   smoothOut
+    animation = workspaces,    1,     2,     juice,    slide
+    animation = workspacesIn,  1,     2,     juice,    slide
+    animation = workspacesOut, 1,     1.5,   overshot,  slide
+    animation = zoomFactor,    1,     3.5,   silk
+}
+
+# Dead config under the float-everything rule, kept so removing that one rule
+# restores a working tiler. pseudotile was removed from hyprland by 0.56 — gone.
+dwindle {
+    preserve_split = true
+}
+
+master {
+    new_status = master
+}
+
+misc {
+    force_default_wallpaper = -1
+    disable_hyprland_logo = false
+}
+
+
+#############
+### INPUT ###
+#############
+
+input {
+    # Plain us/ru on purpose. Colemak-DH lives in keyd's [main] layer now, not here —
+    # one remap layer, one place to look. The old `custom` / `colemak_dh_q7` pair also
+    # referenced a hand-written XKB symbols file that exists in NO repo, so it would
+    # have hard-failed on first boot. docs/keyboard-pipeline.md.
+    kb_layout = us,ru
+    kb_variant = ,
+    kb_model =
+    kb_options =
+    kb_rules =
+
+    follow_mouse = 1
+
+    sensitivity = 0
+}
+
+# TODO: per-device tuning. betrayer's blocks named three mice that may not be what gets
+# plugged into the mini. Run `hyprctl devices`, then add scroll_factor / sensitivity
+# blocks for whatever is actually there. No touchpad on this machine — no gestures.
+
+
+
+###################
+### KEYBINDINGS ###
+###################
+
+# ══════════════════════════════════════════════════════════════════════════════════
+# RECONCILED AGAINST THE MAC SPEC — docs/mac-hotkeys.md — 2026-08-01. Never yet booted.
+#
+# Architecture, read once:
+#   - $mainMod = ALT. The Lily58's prime left thumb sends LALT — the same physical
+#     thumb that drives aerospace on the mac. keyd's [alt] layer is deliberately
+#     EMPTY: alt+<physical key> falls through the Gallium [main] table, so Hyprland
+#     receives alt+<the LETTER that key types>. AeroSpace binds letters ("alt-s" =
+#     the key that types s, wherever Gallium put it) — fallthrough replicates that.
+#   - The cmd-thumb (LGUI/RGUI) never reaches Hyprland for letters: keyd's [meta]
+#     bridge turns cmd+<key> into Ctrl+<letter> app semantics (copy/paste/tabs/find).
+#     Two namespaces, exactly like the mac: alt = WM, cmd = app. No collisions by
+#     construction. The only Super chords that DO arrive (deliberate pass-throughs):
+#     Super+G (mode-c gate), Super+Space (launcher), Super+Shift+Esc (exit hatch).
+#   - Binds use code: (the letter's plain-us XKB code), so they fire identically on
+#     EN and RU. Layout-independent AND letter-faithful at once.
+#   - Floating everywhere, no directional focus, no tiling verbs — the mac model is
+#     virtual desktops + express lanes + snap grid, settled (spec §5.7, §9.3-4).
+#
+# Gallium letter → the code: to bind (the letter's position in plain-us XKB):
+#   a  b  c  d  e  f  g  h  i  j  k  l  m
+#  38 56 54 40 26 41 42 43 31 44 45 46 58
+#   n  o  p  q  r  s  t  u  v  w  x  y  z
+#  57 32 33 24 27 39 28 30 55 25 53 29 52
+# ══════════════════════════════════════════════════════════════════════════════════
+
+$mainMod = ALT
+$bin = ~/.local/bin
+
+# ──── Express lanes — one key per app, focus-or-cycle-or-launch (spec §5.1) ────
+# Dead mac lanes NOT ported: alt-s Safari (no safari on linux; slot free — glide or
+# orion may claim it after the browser trial), alt-m Mattermost / alt-g Ghostty (no
+# work tooling on this box, ever). alt-g stays free — mode c is on SUPER+G, not here.
+bind = $mainMod, code:57, exec, $bin/focus-or-launch zen zen-browser      # N → zen (the Arc lane)
+bind = $mainMod, code:52, exec, $bin/focus-or-launch dev.zed.Zed zeditor  # Z → zed (class+cmd: verify on first boot)
+bind = $mainMod, code:25, exec, $bin/focus-or-launch kitty kitty          # W → kitty (holds live ssh — never on a kill-list)
+# Free lane slots for first boot: S(39), E(26 — needs $fileManager picked first),
+# Q(24 — scratch-note slot, spec's Jot), T(28), R(27 — was the Kagi slot, poetic for orion).
+
+# ──── Window verbs ────
+bind = $mainMod, code:55, fullscreen, 0                                   # V → fullscreen (spec: alt-v)
+bind = $mainMod, code:46, exec, hyprctl dispatch dpms toggle DP-2         # L → blackout the deLL (spec §5.9; alt-b not ported, no 2nd screen)
+# alt-shift-q = killem, the end-of-day sweep (spec §5.8) — script not written yet. Parked.
+# alt-o / alt-shift-s (monitor toss / swap) — single monitor, dead until a second lands.
+
+# ──── Launcher & clipboard ────
+bind = SUPER, space, exec, $menu                                          # cmd+space — spotlight muscle memory
+bind = $mainMod, space, exec, cliphist list | fuzzel --dmenu -p clip | cliphist decode | wl-copy
+
+# ──── Workspaces — switch (spec §1) ────
+bind = $mainMod, code:10, workspace, 1
+bind = $mainMod, code:11, workspace, 2
+bind = $mainMod, code:12, workspace, 3
+bind = $mainMod, code:13, workspace, 4
+bind = $mainMod, code:14, workspace, 5
+bind = $mainMod, code:15, workspace, 6
+bind = $mainMod, code:16, workspace, 7
+bind = $mainMod, code:17, workspace, 8
+bind = $mainMod, code:18, workspace, 9
+bind = $mainMod, code:19, workspace, 10
+bind = $mainMod, code:34, workspace, name:minus       # [ — ws name is legacy, the key is the bracket (spec §0)
+bind = $mainMod, code:35, workspace, name:equal       # ]
+bind = $mainMod, code:9, workspace, name:esc          # Esc → the scratch workspace
+bind = $mainMod, code:191, workspace, name:f13
+bind = $mainMod, code:192, workspace, name:f14
+bind = $mainMod, code:193, workspace, name:f15
+bind = $mainMod, code:194, workspace, name:f16
+bind = $mainMod, code:195, workspace, name:f17
+# ws "section" (the mac's startup ws) lived on alt-F19 — the 2026-08 Lily keymap emits
+# NO F19. Bound anyway for a future firmware tweak; re-home it at the keys if wanted.
+bind = $mainMod, code:197, workspace, name:section
+# Spec: ctrl-left/right = prev/next ws. FIRST-BOOT TRIAL: this clobbers ctrl+arrow
+# word-jump in every text field, and the Lily's arrows live behind HEAVEN anyway.
+# These two lines are first against the wall if they annoy.
+bind = CTRL, left, workspace, e-1
+bind = CTRL, right, workspace, e+1
+bind = $mainMod, mouse_down, workspace, e+1
+bind = $mainMod, mouse_up, workspace, e-1
+
+# ──── Workspaces — haul window + follow (spec §2; movetoworkspace is already atomic) ────
+bind = $mainMod SHIFT, code:10, movetoworkspace, 1
+bind = $mainMod SHIFT, code:11, movetoworkspace, 2
+bind = $mainMod SHIFT, code:12, movetoworkspace, 3
+bind = $mainMod SHIFT, code:13, movetoworkspace, 4
+bind = $mainMod SHIFT, code:14, movetoworkspace, 5
+bind = $mainMod SHIFT, code:15, movetoworkspace, 6
+bind = $mainMod SHIFT, code:16, movetoworkspace, 7
+bind = $mainMod SHIFT, code:17, movetoworkspace, 8
+bind = $mainMod SHIFT, code:18, movetoworkspace, 9
+bind = $mainMod SHIFT, code:19, movetoworkspace, 10
+bind = $mainMod SHIFT, code:34, movetoworkspace, name:minus
+bind = $mainMod SHIFT, code:35, movetoworkspace, name:equal
+bind = $mainMod SHIFT, code:9, movetoworkspace, name:esc
+bind = $mainMod SHIFT, code:191, movetoworkspace, name:f13
+bind = $mainMod SHIFT, code:192, movetoworkspace, name:f14
+bind = $mainMod SHIFT, code:193, movetoworkspace, name:f15
+bind = $mainMod SHIFT, code:194, movetoworkspace, name:f16
+bind = $mainMod SHIFT, code:195, movetoworkspace, name:f17
+bind = $mainMod SHIFT, code:197, movetoworkspace, name:section
+
+# ──── Session ────
+bind = $mainMod SHIFT, code:27, exec, hyprctl reload                       # alt-shift-R → reload (spec §2)
+bind = $mainMod SHIFT, code:54, exec, hyprshot -m region --clipboard-only  # alt-shift-C → screenshot (karabiner rule 9)
+bind = SUPER SHIFT, code:9, exec, command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch exit  # exit hatch — not in spec, kept for sanity
+
+# ──── Layout switching ────
+# Deterministic, not a toggle: one key = one layout, always (spec §8 rules 1-2).
+# The keys live behind CURSE+E/R on the 2026-08 Lily keymap.
+bind = , XF86Launch8, exec, hyprctl switchxkblayout all 0  # F17 → EN
+bind = , XF86Launch9, exec, hyprctl switchxkblayout all 1  # F18 → RU
+# The old F15/F16 wtype copy/paste binds are gone: keyd's [meta] bridge owns copy/paste.
+
+# ──── mode c — the ONE modal layer (spec §5.6), entered by the deliberate cmd-G chord ────
+# Every bound key fires its action and auto-exits. `catchall` closes the mac-era gotcha
+# for good: an unbound key EXITS the mode instead of leaking keystrokes into the app
+# while the mode silently stays on. Codes are Gallium letters, same as everywhere here.
+bind = SUPER, code:42, submap, c
+submap = c
+bind = , code:24, submap, reset                        # q → just leave (spec's escape)
+# haul focused window to a workspace, then exit
+bind = , code:10, movetoworkspace, 1
+bind = , code:10, submap, reset
+bind = , code:11, movetoworkspace, 2
+bind = , code:11, submap, reset
+bind = , code:12, movetoworkspace, 3
+bind = , code:12, submap, reset
+bind = , code:13, movetoworkspace, 4
+bind = , code:13, submap, reset
+bind = , code:14, movetoworkspace, 5
+bind = , code:14, submap, reset
+bind = , code:15, movetoworkspace, 6
+bind = , code:15, submap, reset
+bind = , code:16, movetoworkspace, 7
+bind = , code:16, submap, reset
+bind = , code:17, movetoworkspace, 8
+bind = , code:17, submap, reset
+bind = , code:18, movetoworkspace, 9
+bind = , code:18, submap, reset
+bind = , code:19, movetoworkspace, 10
+bind = , code:19, submap, reset
+bind = , code:34, movetoworkspace, name:minus
+bind = , code:34, submap, reset
+bind = , code:35, movetoworkspace, name:equal
+bind = , code:35, submap, reset
+bind = , code:9, movetoworkspace, name:esc
+bind = , code:9, submap, reset
+bind = , code:39, movetoworkspace, name:section        # s → section, same as mac
+bind = , code:39, submap, reset
+# snap grid — the colstag SHAPE is the mnemonic (spec §5.6): o sits above the h-a-e
+# home cluster: h = left half, a = bottom-right quarter, e = right half, o = top-left.
+bind = , code:43, exec, $bin/snap left-half
+bind = , code:43, submap, reset
+bind = , code:26, exec, $bin/snap right-half
+bind = , code:26, submap, reset
+bind = , code:32, exec, $bin/snap top-left
+bind = , code:32, submap, reset
+bind = , code:38, exec, $bin/snap bottom-right
+bind = , code:38, submap, reset
+# arrows = halves, bound because the hands reach for them (spec's own words)
+bind = , left, exec, $bin/snap left-half
+bind = , left, submap, reset
+bind = , right, exec, $bin/snap right-half
+bind = , right, submap, reset
+bind = , up, exec, $bin/snap top-half
+bind = , up, submap, reset
+bind = , down, exec, $bin/snap bottom-half
+bind = , down, submap, reset
+bind = , code:42, exec, $bin/focus-or-launch kitty kitty   # g → kitty, same as mac
+bind = , code:42, submap, reset
+# linux-only additions on the mac's free letters (f p j y k m were free in mode c):
+bind = , code:45, killactive                           # k → kill window (floating world needs one somewhere)
+bind = , code:45, submap, reset
+bind = , code:40, exec, toggle-darkmode                # d → dark/light (freed by dropping parked ws d)
+bind = , code:40, submap, reset
+bind = , code:29, exec, pkill hyprsunset || hyprsunset -t 3800   # y → night shift 3800K
+bind = , code:29, submap, reset
+# w = the voice-input slot on the mac (superwhisper) — no Linux STT chosen yet, parked.
+bind = , catchall, submap, reset
+submap = reset
+
+# ──── Mouse (floating model: alt-drag anywhere) ────
+bindm = $mainMod, mouse:272, movewindow
+bindm = $mainMod, mouse:273, resizewindow
+bind = , mouse:274, exec, wtype -k Return              # middle → Enter
+bind = , mouse:276, exec, wtype -M ctrl -k c -m ctrl   # side → copy
+bind = , mouse:275, exec, wtype -M ctrl -k v -m ctrl   # side → paste
+
+# ──── Media ────
+# TODO: volume up/down have no bind. betrayer's lines here sent wtype Up/Down arrows —
+# an experiment that only worked in whatever app had focus, not a volume control.
+# Replace with wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ / 5%- once the speakers are known.
+bindel = ,XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+bindel = ,XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+# Brightness binds dropped: the mini has no backlight to control.
+
+bindl = , XF86AudioNext, exec, playerctl next
+bindl = , XF86AudioPause, exec, playerctl play-pause
+bindl = , XF86AudioPlay, exec, playerctl play-pause
+bindl = , XF86AudioPrev, exec, playerctl previous
+# Dark/light and night-shift toggles moved into mode c (d / y) — their old Super+letter
+# seats are eaten by the keyd [meta] bridge and can never reach Hyprland again.
+
+##############################
+### WINDOWS AND WORKSPACES ###
+##############################
+
+# Named-block form throughout. `name` MUST be the first field or the whole block is
+# silently discarded — see docs/lessons.md.
+#
+# No workspace→monitor pinning: betrayer split 1-5 across HDMI and 6-10 across the
+# laptop panel. The mini has one monitor. Revisit only if a second one shows up.
+
+windowrule {
+    # THE FLOATING DOCTRINE (spec §5.7, settled on the mac, ported as settled):
+    # virtual desktops only — every window floats, geometry is owned by hands and the
+    # snap grid, never by a tiling algorithm. Two owners of one frame is perpetual war.
+    # The dwindle/master sections above become dead config under this rule; left in
+    # place so removing this one line restores a working tiler for experiments.
+    name = float-everything
+    match:class = .*
+
+    float = true
+}
+
+windowrule {
+    # Ignore maximize requests from all apps. You'll probably like this.
+    name = suppress-maximize-events
+    match:class = .*
+
+    suppress_event = maximize
+}
+
+windowrule {
+    # Fix some dragging issues with XWayland
+    name = fix-xwayland-drags
+    match:class = ^$
+    match:title = ^$
+    match:xwayland = true
+    match:float = true
+    match:fullscreen = false
+    match:pin = false
+
+    no_focus = true
+}
+
+# Blur for layer-shell surfaces.
+# These only take effect when the layer is CREATED — `hyprctl reload` is not enough,
+# you have to restart the app that owns the surface. docs/lessons.md.
+#
+# The waybar rule is gone: no bar, ever. The rofi rule is gone: fuzzel won the launcher.
+
+layerrule {
+    # TODO verify: fuzzel's layer namespace is believed to be "launcher".
+    # Check with `hyprctl layers` while fuzzel is open, then fix if wrong — a bad
+    # namespace here fails silently, it does not error.
+    name = blur-fuzzel
+    match:namespace = launcher
+    blur = true
+}
+
+layerrule {
+    name = blur-swaync
+    match:namespace = swaync-control-center
+    blur = true
+
+}
+
+layerrule {
+    name = blur-swaync-notif
+    match:namespace = swaync-notification-window
+    blur = true
+}

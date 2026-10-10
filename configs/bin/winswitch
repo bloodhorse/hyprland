@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+import json
+import subprocess
+
+
+def hyprctl_json(cmd):
+    out = subprocess.run(["hyprctl", "-j", cmd], capture_output=True, text=True).stdout
+    return json.loads(out) if out.strip() else []
+
+
+def main():
+    clients = [c for c in hyprctl_json("clients") if c.get("mapped", True) and c.get("class")]
+    if not clients:
+        return
+    clients.sort(key=lambda c: c.get("focusHistoryID", 0))
+    if len(clients) > 1:
+        clients = clients[1:] + clients[:1]
+    lines = [f"{c['class']}  ·  {c['title']}  ·  ws {c['workspace']['name']}" for c in clients]
+    pick = subprocess.run(["fuzzel", "--dmenu", "--index", "-p", "win "],
+                          input="\n".join(lines), capture_output=True, text=True).stdout.strip()
+    if not pick.isdigit():
+        return
+    subprocess.run(["hyprctl", "dispatch", "focuswindow", f"address:{clients[int(pick)]['address']}"])
+
+
+if __name__ == "__main__":
+    main()

@@ -42,6 +42,7 @@ hyprsunset            # night light, bound to Super+N
 awww                  # [AUR] wallpaper daemon — the exec-once line; already installed
 grim                  # screenshots; no bind wired yet, but a mac transfer without them is a lie
 slurp                 # region select for grim
+hyprshot              # the screenshot binds (alt-shift-c, ctrl+shift+3/4)
 
 # ── notifications ──────────────────────────────────────────────────────
 swaync                # also the namespace the blur layerrules match
