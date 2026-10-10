@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+# focus-or-launch <class-regex> <command...> — the express-lane engine.
+#
+# Port of the mac's ~/bin/focus-app (docs/mac-hotkeys.md §5.1), behavior contract:
+#   no window       → launch, let hyprland place it
+#   not focused     → focus the first instance (focuswindow switches workspace too —
+#                     a raise that leaves you on the wrong workspace is the exact
+#                     failure this design exists to kill)
+#   already focused → cycle to the app's next window
+#
+# v1 is single-monitor: the mac's "instance under the mouse first" ordering only
+# matters across a monitor seam. Revisit if a second screen ever lands.
+
+import json
+import re
+import subprocess
+import sys
+
+
+def hyprctl_json(cmd):
+    out = subprocess.run(["hyprctl", "-j", cmd], capture_output=True, text=True).stdout
+    return json.loads(out) if out.strip() else None
+
+
+def main():
+    if len(sys.argv) < 3:
+        sys.exit("usage: focus-or-launch <class-regex> <command...>")
+    cls_re, cmd = sys.argv[1], sys.argv[2:]
+
+    clients = [c for c in (hyprctl_json("clients") or [])
+               if re.search(cls_re, c.get("class", ""))]
+    if not clients:
+        subprocess.Popen(cmd, start_new_session=True,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return
+
+    # Stable order so repeated presses walk every window in the same circle.
+    clients.sort(key=lambda c: c["address"])
+    addrs = [c["address"] for c in clients]
+
+    active = hyprctl_json("activewindow") or {}
+    if re.search(cls_re, active.get("class", "")) and active.get("address") in addrs:
+        target = addrs[(addrs.index(active["address"]) + 1) % len(addrs)]
+    else:
+        target = addrs[0]
+
+    subprocess.run(["hyprctl", "dispatch", "focuswindow", f"address:{target}"])
+
+
+if __name__ == "__main__":
+    main()

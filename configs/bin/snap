@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+# snap <region> | snap <fx> <fy> <fw> <fh> — put the focused window into a fractional
+# region of ITS monitor. Port of the mac's ~/bin/snap (docs/mac-hotkeys.md §5.6).
+#
+# Two rules carried over because they were each wrong once on the mac:
+#   - act on the WM's focused window, never on anyone's idea of "frontmost";
+#   - clear the fullscreen state first, or the window stays *marked* fullscreen in a
+#     half-frame and the next fullscreen toggle restores a stale frame.
+
+import json
+import subprocess
+import sys
+
+REGIONS = {
+    "left-half":    (0.0, 0.0, 0.5, 1.0),
+    "right-half":   (0.5, 0.0, 0.5, 1.0),
+    "top-half":     (0.0, 0.0, 1.0, 0.5),
+    "bottom-half":  (0.0, 0.5, 1.0, 0.5),
+    "top-left":     (0.0, 0.0, 0.5, 0.5),
+    "top-right":    (0.5, 0.0, 0.5, 0.5),
+    "bottom-left":  (0.0, 0.5, 0.5, 0.5),
+    "bottom-right": (0.5, 0.5, 0.5, 0.5),
+    "center":       (1 / 6, 1 / 6, 2 / 3, 2 / 3),
+    "almost-max":   (0.03, 0.03, 0.94, 0.94),
+    "max":          (0.0, 0.0, 1.0, 1.0),
+}
+
+
+def hyprctl_json(cmd):
+    out = subprocess.run(["hyprctl", "-j", cmd], capture_output=True, text=True).stdout
+    return json.loads(out) if out.strip() else None
+
+
+def main():
+    args = sys.argv[1:]
+    if len(args) == 1 and args[0] in REGIONS:
+        fx, fy, fw, fh = REGIONS[args[0]]
+    elif len(args) == 4:
+        fx, fy, fw, fh = (float(a) for a in args)
+    else:
+        sys.exit("usage: snap <" + "|".join(REGIONS) + "> | snap fx fy fw fh")
+
+    win = hyprctl_json("activewindow") or {}
+    if not win.get("address"):
+        sys.exit(0)
+
+    mon = next(m for m in hyprctl_json("monitors") if m["focused"])
+    # Logical size: hyprland reports physical pixels + scale. The Dell is landscape
+    # (transform 0); a rotated monitor would need width/height swapped here.
+    lw = mon["width"] / mon["scale"]
+    lh = mon["height"] / mon["scale"]
+    # reserved = space eaten by layer-shell bars. No bar, ever, on this box — the
+    # values are zeros and the assumed [left, right, top, bottom] order is untested.
+    rl, rr, rt, rb = mon.get("reserved", [0, 0, 0, 0])
+    ux, uy = mon["x"] + rl, mon["y"] + rt
+    uw, uh = lw - rl - rr, lh - rt - rb
+
+    x, y = int(ux + fx * uw), int(uy + fy * uh)
+    w, h = int(fw * uw), int(fh * uh)
+
+    addr = f"address:{win['address']}"
+    subprocess.run(["hyprctl", "--batch",
+                    f"dispatch setfloating {addr} ; "
+                    f"dispatch fullscreenstate 0 0 {addr} ; "
+                    f"dispatch resizewindowpixel exact {w} {h},{addr} ; "
+                    f"dispatch movewindowpixel exact {x} {y},{addr}"])
+
+
+if __name__ == "__main__":
+    main()

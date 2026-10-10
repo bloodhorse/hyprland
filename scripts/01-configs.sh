@@ -59,5 +59,15 @@ done
 echo "==> linking shell config"
 link "$REPO/configs/bash/.bashrc" "$HOME/.bashrc"
 
+# Helper scripts the hyprland binds call ($bin = ~/.local/bin in hyprland.conf).
+# Linked per-file so unrelated things already living in ~/.local/bin are untouched.
+echo "==> linking bin scripts"
+mkdir -p "$HOME/.local/bin"
+for f in "$REPO"/configs/bin/*; do
+    [[ -f "$f" ]] || continue
+    chmod +x "$f"
+    link "$f" "$HOME/.local/bin/$(basename "$f")"
+done
+
 echo "==> 01-configs: done"
 echo "    reminder: nothing here restarts Hyprland. Reload it yourself when ready."

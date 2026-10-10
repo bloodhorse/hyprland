@@ -6,7 +6,10 @@
 
 # ── browser ────────────────────────────────────────────────────────────
 zen-browser-bin       # [AUR] bound to Alt+Z in hyprland.conf; already installed
-tridactyl-native      # [AUR] native messenger — tridactylrc's :native commands need it
+# tridactyl native messenger: NOT a package. The AUR only has firefox-tridactyl-native
+# (firefox paths, stale since apr 2026) — useless for zen. Install from inside the
+# browser instead: tridactyl's `:installnative` drops the messenger where zen looks.
+# First-boot manual step; tridactylrc's :native commands are inert until then.
 
 # ── shell ──────────────────────────────────────────────────────────────
 zoxide                # bash/.bashrc calls `zoxide init bash` — bashrc errors out without it

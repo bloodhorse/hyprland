@@ -36,3 +36,5 @@ alias sb='source ~/.bashrc'
 alias l='ls'
 alias vol='pavucontrol &'
 alias sbc='kitty @ get-text --extent all | wl-copy'
+
+. "$HOME/.local/bin/env"

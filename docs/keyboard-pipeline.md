@@ -4,11 +4,12 @@ How a keypress gets from the Lily58 to a Hyprland action, and why each layer exi
 
 Current design: **Lily58 (ZMK) → keyd → XKB → Hyprland binds.**
 
-> **State warning.** keyd V1.3 shipped and ran on betrayer, the dead laptop. Its config and
-> deployment notes live in the `hypr-keys` repo, not here. The post-keyd `hyprland.conf` was
-> never committed — the bind table in `hypr-keys/keyd/DEPLOYMENT.md` is the only surviving
-> spec of that era. The binds in `configs/hypr/hyprland.conf` in *this* repo are the older
-> kanata-era snapshot and have not yet been reconciled with it.
+> **State warning.** The keyd config now lives here — `configs/keyd/default.conf`, V2.0,
+> Gallium, never yet run on real hardware. V1.3 (Colemak-DH) shipped and ran on betrayer, the
+> dead laptop; its deployment notes stay in the `hypr-keys` repo. The post-keyd
+> `hyprland.conf` was never committed — the bind table in `hypr-keys/keyd/DEPLOYMENT.md` is
+> the only surviving spec of that era. The binds in `configs/hypr/hyprland.conf` in *this*
+> repo are the older kanata-era snapshot and have not yet been reconciled with it.
 
 ## The layout changed: Gallium, not Colemak-DH
 
@@ -31,20 +32,22 @@ Concretely:
   navigation quartet, same four physical keys everywhere) is what carries; the letters are
   an implementation detail of the old layout.
 
-### Open question — where does Gallium actually live?
+### Where Gallium lives — settled 2026-08-01
 
-Unresolved, and it decides how much keyd has to do on the mini:
+**In Karabiner.** The Lily58 ZMK firmware sends plain QWERTY positions; the rule
+"Gallium Colstag (Lily58 Only)" in `~/.config/karabiner/karabiner.json` does the remap on
+the mac. So there is no double-remap risk, and on miniarch **keyd takes Karabiner's role**:
+the full Gallium letter table lives in `[main]`.
 
-1. **In the Lily58 ZMK firmware** — then the board already emits Gallium positions and keyd
-   needs no letter remap at all, only the `[meta]` mac-modifier work.
-2. **In the macOS input source** — then it is a mac-side setting with no Linux counterpart,
-   and keyd has to reproduce the whole layout.
-3. **In Karabiner** — same as (2) for practical purposes, but `karabiner.json` becomes the
-   ground truth to translate from.
+Done — `configs/keyd/default.conf` in this repo, generated from that karabiner rule, with
+the resulting grid drawn in its header. `scripts/02-keyd.sh` installs it.
 
-Answer this before writing a single line of the new keyd `[main]`. Rewriting a layout that
-the firmware is already applying gets you a double remap, which is exactly the class of bug
-that ate the kanata era.
+**Flag carried over from the derivation:** `karabiner.json` still contains a live
+"Colemak Mod-DH (Lily58 Only)" rule at index 6, *above* the Gallium rules at 14–16, with the
+same device and input-source conditions and no variable gate. Karabiner is documented
+first-match-wins top-to-bottom with no chaining, so on paper that stale rule shadows Gallium
+for plain letters. It does not affect this repo — the keyd table was derived from the Gallium
+rule, which matches published Gallium — but the mac config wants that dead rule deleted.
 
 ## Hardware
 
@@ -57,45 +60,73 @@ that ate the kanata era.
 No internal keyboard, no touchpad, no battery, no backlight. Everything laptop-shaped in the
 old configs is dead weight here.
 
-Firmware is deliberately out of scope: the Lily58 ZMK keymap is its own project
-(`lily58-zmk`) and never enters this repo. `hypr-keys/inventory/lily58.keymap` is a snapshot
-for reading, not a build input.
+Firmware is deliberately out of scope: the keymap's source of truth is the ZMK Studio
+state on the board itself, mirrored to `bloodhorse/zmk-config` (`config/lily58.keymap`,
+dumped over Studio RPC). `hypr-keys/inventory/lily58.keymap` is the April 2026 snapshot —
+**stale since the 2026-08-01 rework**; read the zmk-config mirror instead.
 
 ## What the Lily58 sends
 
 ZMK emits plain evdev codes in **QWERTY positions** — the board knows nothing about
-Colemak-DH. On top of that it sends a few specials:
+Gallium. Verified against the 2026-08-01 keymap: base-layer letters, numbers and the
+bottom-row punctuation are exactly the QWERTY-position codes the keyd tables assume.
+On top of that it sends specials (layer names: CURSE = left-thumb mo, HEAVEN =
+right-thumb mo):
 
-| key | purpose |
-|---|---|
-| `XF86Launch8` | switch to English |
-| `XF86Launch9` | switch to Russian |
-| `F15` / `F16` | copy / paste (handled in Hyprland, see below) |
+| key | where it lives now | purpose |
+|---|---|---|
+| `F17` → XKB `XF86Launch8` | CURSE+E | switch to English |
+| `F18` → XKB `XF86Launch9` | CURSE+R | switch to Russian |
+| `F15` / `F16` | HEAVEN top row / CURSE+F | copy / paste (handled in Hyprland, see below) |
+| `CAPS` | CURSE+LShift-position | new in the rework — passes through keyd as plain capslock |
+| `LGUI` / `RGUI` | left thumb / right outer thumb | both hit keyd's `[meta]`; RGUI replaced RAlt 2026-08-01 |
+| `LG(K)` | CURSE+D-position | firmware-hardwired cmd+K — lands in `[meta]` as `k = C-a` |
+| arrows, `Del`, `'` | HEAVEN layer | pass through keyd untouched |
+
+F17/F18 used to be dedicated inner keys on the base layer; since the rework the language
+switch costs a CURSE hold. There is no right Alt and no hold-tap on Space/Enter anymore.
 
 ## Layer 1 — keyd (evdev → evdev)
 
-Service: `keyd.service` (system-level). Config: `/etc/keyd/default.conf`, sourced from
-`hypr-keys/keyd/default.conf`.
+Service: `keyd.service` (system-level). Config: `/etc/keyd/default.conf`, installed from
+`configs/keyd/default.conf` by `scripts/02-keyd.sh`.
 
 keyd does three jobs:
 
 1. **The letter layout lives here** — `[main]`, deliberately pulled *out* of XKB so there is
-   one remap layer and one place to look. The shipped config holds **Colemak-DH**; the mini
-   needs **Gallium**, and whether keyd should remap at all depends on the open question
-   above. Rewrite this section; do not copy it.
-2. **Caps → Esc.**
-3. **Mac modifier semantics.** `[meta]` maps Cmd+C/V/X/Z/A onto Ctrl+C/V/X/Z/A, and maps
-   every other letter explicitly to `M-<qwerty-letter>` so Hyprland's `Super+<letter>` binds
-   see physical positions.
+   one remap layer and one place to look. It holds **Gallium Colstag**, generated from the
+   karabiner rule. One `[shift]` entry rides along: physical `,` shifts to `\`, not `?`.
+2. **No Caps → Esc.** The base layer has no capslock — home-row leftmost is LCTRL and Esc
+   has its own key — and since 2026-08-01 the board *can* emit CAPS (CURSE+LShift-position),
+   which keyd deliberately passes through as plain capslock. karabiner has no caps remap
+   either. The V1.3 line is kept commented in the config so the question is not re-opened
+   a third time.
+3. **The cmd bridge (V2.1, 2026-08-01).** `[meta]` maps *every* key to
+   `Ctrl+<the Gallium letter it types>` — cmd+X on the mac is ctrl+X on Linux, and both
+   follow the LETTER (karabiner's "Gallium mod-combos" maps `command+r → command+c`
+   because physical R types `c`). Copy/paste/cut/undo/select-all, new tab, close tab,
+   find, cmd+1..9 tab switching — the whole cmd-family arrives with mac muscle memory
+   intact from the cmd-thumb (LGUI) or RGUI. One exception: `g = M-g`, the mode-c gate,
+   passes through as a real Super chord (see hyprland.conf).
+
+4. **The alt namespace (V2.1).** `[alt]` is deliberately **empty**: the alt-thumb is
+   Hyprland's mainMod, and fallthrough means alt+<physical key> arrives carrying the
+   *Gallium letter* — which is exactly what AeroSpace binds on the mac ("alt-s" = the
+   key that types s). Hyprland binds the letter's plain-us `code:`. Two modifier
+   namespaces, same as the mac: **alt = window manager, cmd = app semantics.** They
+   cannot collide by construction. This dissolved the old Super+K/focus-up collision —
+   there are no Super letter binds left to collide with, so `k = C-a` stands.
 
 `[ids] 1d50:615e` scopes all of it to the Lily58 alone. Since the mini has no built-in
 keyboard and the Lily58 is the only board, that scoping is exactly right as written.
 
-**Why all 26 letters are spelled out in `[meta]`** — the short version: `[meta:M]` alone does
-not work. Unmapped keys in a layer fall through to `[main]`, pick up the Colemak remap on the
-way, and arrive at Hyprland as the wrong bind (physical F opened a terminal instead of going
-fullscreen). This is an upstream architectural limit, not a config mistake. Full write-up:
-`hypr-keys/keyd/HOW-IT-WORKS.md`, summarised in [lessons.md](lessons.md).
+**Why `[meta]` spells every key out while `[alt]` spells none** — keyd's layers do not
+shield unmapped keys from `[main]`: an unmapped key falls through and picks up Gallium
+on the way (upstream architectural limit, keyd issues #705/#752 — full write-up in
+`hypr-keys/keyd/HOW-IT-WORKS.md`). For `[meta]` that fallthrough is wrong (we want
+Ctrl-translations, so every key is written). For `[alt]` that same fallthrough is the
+entire design (we *want* the letter to arrive). The V2.0 identity table (`M-<qwerty>`
+spell-out protecting physical-position binds) is gone — the binds follow letters now.
 
 ## Layer 2 — XKB (evdev → keysym)
 
@@ -123,52 +154,42 @@ bind = , XF86Launch9, exec, hyprctl switchxkblayout all 1  # Russian
 Deterministic, not a toggle: one key means one layout, always. You never have to look at an
 indicator to know what you are about to type. keyd passes `XF86Launch8/9` through untouched.
 
-## Layer 4 — Hyprland binds (tiling)
+## Layer 4 — Hyprland binds (floating, letter-faithful)
 
-Every bind uses `code:` (raw XKB keycode = evdev code + 8) instead of a keysym, so it fires
-identically on EN and RU. This is the load-bearing trick of the whole scheme, it is
-hardware-agnostic, and — crucially — it is **layout-agnostic too**: the Colemak-DH → Gallium
-switch does not invalidate a single bind. It only invalidates the comments.
+Reconciled against `docs/mac-hotkeys.md` on 2026-08-01 (never yet booted). The model is
+the mac's, whole: **floating everywhere** (`float-everything` windowrule), no directional
+focus, no tiling verbs — virtual desktops + express lanes + snap grid.
 
-The mnemonic table in `configs/hypr/hyprland.conf` still reads Colemak-DH:
+Every bind still uses `code:`, but the codes now mean **the Gallium letter's plain-us
+position**, because keyd's empty `[alt]` hands Hyprland the letter, not the physical key.
+That keeps binds firing identically on EN and RU *and* keeps the mac's letter mnemonics
+true. The letter→code table lives in the hyprland.conf keybindings header.
 
-```
-# Phys. QWERTY:  a  s  d  f  g    h  j  k  l  ;
-# Colemak-DH:    a  r  s  t  g    m  n  e  i  o
-# XKB keycode:  38 39 40 41 42   43 44 45 46 47
-```
+The bind families (details and per-key comments in `configs/hypr/hyprland.conf`):
 
-**Redo this table for Gallium** when the layout question is settled. Until then it tells you
-what the keycodes did on betrayer, which is history, not instructions.
-
-Navigation is **MNEI** — the four Colemak-DH letters that sat on physical HJKL. The mnemonic
-is dead under Gallium; the *principle* is not. What actually matters is that one physical
-quartet drives navigation in Hyprland, nvim, zed and tridactyl alike. Re-derive the letters,
-keep the physical positions (43/44/45/46) unless there is a reason to move them.
-
-| modifier | code:43 | code:44 | code:45 | code:46 |
-|---|---|---|---|---|
-| Super | focus left | focus down | focus up | focus right |
-| Super+Shift | move left | move down | move up | move right |
-| Super+Ctrl | resize ← | resize ↓ | resize ↑ | resize → |
-
-Arrow keys work as a fallback. Workspaces are `Super + code:10–19` (1–0), `Super+Shift` to
-move a window there, `Super+scroll` to cycle. Mouse: `Super+LMB` drag, `Super+RMB` resize.
-
-The window-management verbs themselves (`Super+F` = terminal? fullscreen?) are exactly the
-part that differs between the kanata-era snapshot and the keyd-era table. Do not trust the
-current file — reconcile against `mac-hotkeys.md` first.
+- **Express lanes** — `alt-n` zen, `alt-z` zed, `alt-w` kitty, via `focus-or-launch`
+  (raise-or-cycle through the WM, so the workspace always follows — spec §5.1).
+- **Workspaces** — `alt-1..0`, `alt-[`/`alt-]` (ws `minus`/`equal`), `alt-esc`,
+  `alt-f13..f17`; `alt-shift-<same>` hauls the window and follows. `section` is bound
+  to F19 which the current firmware does not emit — parked.
+- **mode c** — Hyprland submap entered by `Super+G` (= the mac's deliberate `cmd-g`
+  chord; the one letter `[meta]` passes through). Haul keys, the `o/h-a-e` snap grid
+  (`configs/bin/snap`), and `catchall` so an unbound key *exits* instead of leaking —
+  the aerospace gotcha, closed at the compositor level.
+- **Verbs** — `alt-v` fullscreen, `alt-l` monitor blackout (dpms), `alt-shift-c`
+  screenshot, `alt-shift-r` reload. `killem` (alt-shift-q) waits on its script.
 
 ## Full path
 
 ```
 Lily58 (ZMK, QWERTY positions)
 │
-├─ letters      → evdev → keyd [main] (layout)   → XKB us/ru → application
-├─ Cmd+C/V/X/Z/A→ evdev → keyd [meta] → Ctrl+…    → XKB      → application
-├─ Cmd+<letter> → evdev → keyd [meta] M-<qwerty>  → Hyprland bind
-├─ XF86Launch8/9→ evdev → keyd (pass)             → Hyprland → switchxkblayout
-└─ Super+code:XX→                                    Hyprland bind (layout-independent)
+├─ letters       → evdev → keyd [main] (Gallium)      → XKB us/ru → application
+├─ Cmd+<key>     → evdev → keyd [meta] → Ctrl+<letter> → XKB      → application  (the bridge)
+├─ Cmd+G         → evdev → keyd [meta] g = M-g         → Hyprland → submap c
+├─ Alt+<key>     → evdev → keyd [alt] EMPTY → [main]   → Hyprland bind on the letter's code:
+├─ XF86Launch8/9 → evdev → keyd (pass)                 → Hyprland → switchxkblayout
+└─ Super+Space / Super+Shift+Esc → keyd (pass)         → Hyprland (launcher / exit hatch)
 ```
 
 ## The unsolved blocker
