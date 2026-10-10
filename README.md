@@ -1,4 +1,4 @@
-# hyprland-terraforming
+# hyprland
 
 Terraforming a macOS-shaped Hyprland environment onto **miniarch** — an Intel Mac mini 2018
 (i5-8500B, UHD 630) that already runs Arch on the linux-t2 kernel.
@@ -26,33 +26,24 @@ transaction gets an automatic pre/post snapshot. There is a rollback.
 
 ## Status
 
-Skeleton stage, machine still **headless** — no monitor attached yet. Everything so far is
-prep that can be done over ssh. What is real:
+As of 2026-10-10 this is the mini's live desktop, not a plan: `~/.config/hypr`, `rofi`,
+`fuzzel`, `~/.config/keyd/app.conf` and the scripts in `~/.local/bin` are symlinks into
+this repo, and `/etc/keyd/default.conf` is a copy of `configs/keyd/default.conf`.
 
-- `configs/` — carried over from betrayer (the dead laptop). Machine-specific junk stripped;
-  the monitor section is a TODO until the Dell is plugged in and identified.
-- `packages/` — first honest pass at what the configs actually need. Most of it is already
-  installed; per the 2026-08-01 inventory the only real gaps were **fuzzel** and **keyd**.
-  Hyprland on the box is 0.55.4, kitty 0.48.
-- `scripts/` + `setup.sh` — provisioning runner, not yet run against the mini.
-- Keybinds in `configs/hypr/hyprland.conf` are **kanata-era** and await reconciliation
-  against `docs/mac-hotkeys.md` (the mac's AeroSpace/Karabiner semantics, extracted
-  separately). They are prior art, not the spec.
-- keyd config itself still lives in the `hypr-keys` repo. `scripts/02-keyd.sh` only points
-  at it.
-- **The layout changed.** bekh types **Gallium (Colstag)** now; Colemak-DH was betrayer. The
-  `code:`-based binds survive untouched — they map physical keycodes — but every
-  Colemak-derived *mnemonic* is stale, and the keyd `[main]` table is a template to rewrite
-  rather than a drop-in. That also puts `nvim`, `zed` and `tridactyl` (all built on the MNEI
-  quartet) in the **needs re-derivation** bucket, not the blessed-carry-over one. Details
-  and the open question — where Gallium actually lives — in `docs/keyboard-pipeline.md`.
+- Hyprland 0.56.2. Its config format (hyprlang) is deprecated since 0.55 and will be
+  dropped; the move to Lua is owed and not started. Do not upgrade Hyprland before it.
+- The keyboard path is `docs/keyboard-pipeline.md`; read it before touching keyd or a bind.
+- `docs/mac-hotkeys.md` is the 2026-08-01 snapshot of the mac's binds. The mac itself
+  (`~/.config/karabiner`, `~/tower/forge/AEROSPACE`) is the reference where they disagree.
+- kitty is not here: `~/.config/kitty` is a clone of `bloodhorse/kitty`, the mac is its
+  source. `nvim`, `zed` and `tridactyl` under `configs/` are old copies built on the
+  Colemak-DH navigation keys and have not been re-derived for Gallium.
+- Russian input is broken under keyd and parked.
 
-### Expiry date on the config format
-
-Hyprland 0.56.0 landed with no breaking changes from 0.55, but **0.56.1 adds a deprecation
-notice for `.conf` configs** — upstream is migrating to Lua. Nothing to do today; we build
-`.conf` because that is what runs. Just know that a migration is on the horizon and do not
-invest in clever `.conf` metaprogramming that will have to be thrown away.
+Four older repos were folded in or retired on 2026-10-10 and have no local copies:
+`hypr-keys`, `mac-bin`, `ags-dashboard`, `quickshell-bar` (all archived under
+`bloodhorse/` on GitHub). The two `hypr-keys` documents still worth reading live in
+`docs/keyd-era-v1/`; any other path here that names one of the four points at its archive.
 
 ## Layout
 

@@ -46,7 +46,7 @@ if [[ ${#STEPS[@]} -eq 0 ]]; then
     exit 1
 fi
 
-echo "hyprland-terraforming — plan"
+echo "hyprland — plan"
 echo
 for s in "${STEPS[@]}"; do
     # The second comment line of each script is its one-line summary.

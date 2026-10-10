@@ -229,8 +229,8 @@ Dead ends already tested — do not retry: `[meta:M]` alone, `default_layout` in
 (no such variable), `swap(main)` (the main layer cannot be toggled),
 `leftmeta = layer(bare_meta)` (warns, solves nothing).
 
-Full write-up: `hypr-keys/keyd/HOW-IT-WORKS.md`. Deployment history and the surviving
-Hyprland bind table: `hypr-keys/keyd/DEPLOYMENT.md`.
+Full write-up: `docs/keyd-era-v1/HOW-IT-WORKS.md`. Deployment history and the surviving
+Hyprland bind table: `docs/keyd-era-v1/DEPLOYMENT.md`.
 
 ### Emergency stop
 

@@ -6,7 +6,7 @@ Hyprland config on the mini maps *to* this document, not the other way round. Wh
 exists here, the port has to reproduce the **behavior**, not just the keycap.
 
 **Prior art, not spec.** The betrayer-era Hyprland binds (documented in
-`hypr-keys/keyd/DEPLOYMENT.md` and `hypr-keys/README.md`) are a previous machine's config. Useful
+`docs/keyd-era-v1/DEPLOYMENT.md` and `hypr-keys/README.md`) are a previous machine's config. Useful
 as reference for Hyprland syntax and for the keyd/kanata layer — but they are *not* the target.
 Anything in them that contradicts this file loses.
 

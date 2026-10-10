@@ -127,7 +127,7 @@ keyboard and the Lily58 is the only board, that scoping is exactly right as writ
 **Why every modifier layer spells its keys out** — keyd's layers do not shield unmapped
 keys from `[main]`: an unmapped key falls through and picks up Gallium on the way
 (upstream architectural limit, keyd issues #705/#752 — full write-up in
-`hypr-keys/keyd/HOW-IT-WORKS.md`). `[meta]` wants Ctrl-translations and `[alt]` wants
+`docs/keyd-era-v1/HOW-IT-WORKS.md`). `[meta]` wants Ctrl-translations and `[alt]` wants
 identity, so both are written in full. `[control]` is the one that stays empty: there the
 fallthrough is the design, ctrl+<physical key> arriving as ctrl+<Gallium letter>.
 
@@ -213,7 +213,7 @@ Two separate faults:
 
 Karabiner solves (2) on the mac by switching the input source while Cmd is held. The Linux
 equivalent would be rewriting the Russian layout inside keyd and atomically swapping to an
-English layer on Cmd/Ctrl-hold. Two V2 sketches sit in `hypr-keys/keyd/DEPLOYMENT.md`;
+English layer on Cmd/Ctrl-hold. Two V2 sketches sit in `docs/keyd-era-v1/DEPLOYMENT.md`;
 neither was attempted.
 
 Worth noting: the same problem existed under keymapper, and under kanata before it. The tool
