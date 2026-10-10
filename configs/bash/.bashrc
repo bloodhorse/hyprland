@@ -29,7 +29,6 @@ a() {
 #eval "$(starship init bash)"
 alias cc='claude --dangerously-skip-permissions'
 alias p='sudo pacman -S'
-alias tt='~/.config/kitty/toggle-theme.sh'
 alias tutor='nvim /usr/share/vim/vim92/tutor/tutor1'
 alias brc='nano ~/.bashrc'
 alias sb='source ~/.bashrc'

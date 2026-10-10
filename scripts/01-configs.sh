@@ -21,7 +21,7 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 # Colemak-DH, and bekh types Gallium now. They deploy fine, they just may bind the
 # wrong four keys until re-derived. See docs/keyboard-pipeline.md.
 # rofi is deployed as a theme reference only — fuzzel won the launcher pick.
-TARGETS=(hypr kitty nvim zed tridactyl rofi fuzzel)
+TARGETS=(hypr nvim zed tridactyl rofi fuzzel)
 
 link() {
     local src="$1" dst="$2"
