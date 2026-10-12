@@ -1,0 +1,53 @@
+#!/bin/sh
+run="${XDG_RUNTIME_DIR:-/tmp}"
+exec 9>"$run/bri.lock"
+flock -n 9 || exit 0
+
+cache="$run/bri.level"
+step=6
+cur=""
+if [ -f "$cache" ] && [ $(( $(date +%s) - $(stat -c %Y "$cache") )) -lt 60 ]; then
+    cur=$(cat "$cache")
+fi
+case "$cur" in
+    ''|*[!0-9]*) cur=$(ddcutil getvcp 10 --brief 2>/dev/null | awk '{print $4}') ;;
+esac
+[ -z "$cur" ] && exit 1
+
+gamma=100
+if pgrep -x hyprsunset >/dev/null; then
+    g=$(hyprctl hyprsunset gamma 2>/dev/null | tr -dc '0-9.')
+    gamma=${g%.*}
+    [ -z "$gamma" ] && gamma=100
+fi
+
+case "$1" in
+    up)
+        if [ "$gamma" -lt 100 ]; then
+            gamma=$((gamma + 10)); [ "$gamma" -gt 100 ] && gamma=100
+            hyprctl hyprsunset gamma "$gamma" >/dev/null
+        else
+            cur=$((cur + step)); [ "$cur" -gt 100 ] && cur=100
+            ddcutil setvcp 10 "$cur" --noverify
+        fi
+        ;;
+    down)
+        if [ "$cur" -gt 0 ]; then
+            cur=$((cur - step)); [ "$cur" -lt 0 ] && cur=0
+            ddcutil setvcp 10 "$cur" --noverify
+        else
+            if ! pgrep -x hyprsunset >/dev/null; then
+                hyprctl dispatch exec hyprsunset >/dev/null
+                sleep 0.4
+            fi
+            gamma=$((gamma - 10)); [ "$gamma" -lt 20 ] && gamma=20
+            hyprctl hyprsunset gamma "$gamma" >/dev/null
+        fi
+        ;;
+    *) exit 2 ;;
+esac
+
+echo "$cur" > "$cache"
+if [ "$cur" -gt 0 ]; then level=$((50 + cur / 2)); else level=$((gamma / 2)); fi
+swayosd-client --custom-icon display-brightness-symbolic \
+    --custom-progress "$(awk "BEGIN{printf \"%.2f\", $level/100}")" 2>/dev/null
