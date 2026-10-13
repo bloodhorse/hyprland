@@ -6,13 +6,23 @@ flock -n 9 || exit 0
 cache="$run/bri.level"
 step=6
 cur=""
+nod="$run/bri.noddc"
+if [ -f "$nod" ] && [ $(( $(date +%s) - $(stat -c %Y "$nod") )) -lt 300 ]; then
+    cur=x
+fi
 if [ -f "$cache" ] && [ $(( $(date +%s) - $(stat -c %Y "$cache") )) -lt 60 ]; then
     cur=$(cat "$cache")
 fi
 case "$cur" in
+    x) cur="" ;;
     ''|*[!0-9]*) cur=$(ddcutil getvcp 10 --brief 2>/dev/null | awk '{print $4}') ;;
 esac
-[ -z "$cur" ] && exit 1
+ddc=1
+if [ -z "$cur" ]; then
+    touch "$nod"
+    ddc=0
+    cur=0
+fi
 
 gamma=100
 if pgrep -x hyprsunset >/dev/null; then
@@ -26,7 +36,7 @@ case "$1" in
         if [ "$gamma" -lt 100 ]; then
             gamma=$((gamma + 10)); [ "$gamma" -gt 100 ] && gamma=100
             hyprctl hyprsunset gamma "$gamma" >/dev/null
-        else
+        elif [ "$ddc" = 1 ]; then
             cur=$((cur + step)); [ "$cur" -gt 100 ] && cur=100
             ddcutil setvcp 10 "$cur" --noverify
         fi
@@ -47,7 +57,7 @@ case "$1" in
     *) exit 2 ;;
 esac
 
-echo "$cur" > "$cache"
-if [ "$cur" -gt 0 ]; then level=$((50 + cur / 2)); else level=$((gamma / 2)); fi
+[ "$ddc" = 1 ] && echo "$cur" > "$cache"
+if [ "$ddc" = 0 ]; then level=$gamma; elif [ "$cur" -gt 0 ]; then level=$((50 + cur / 2)); else level=$((gamma / 2)); fi
 swayosd-client --custom-icon display-brightness-symbolic \
     --custom-progress "$(awk "BEGIN{printf \"%.2f\", $level/100}")" 2>/dev/null
