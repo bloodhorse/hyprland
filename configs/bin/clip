@@ -1,41 +1,164 @@
-#!/bin/sh
-pkill -x tofi && exit 0
+#!/usr/bin/env python3
+import fcntl
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import time
 
-width=${CLIP_WIDTH:-30}
-list=$(cliphist list)
-[ -n "$list" ] || exit 0
+STATE = os.path.expanduser("~/.local/state/clip")
+CLIPS = os.path.join(STATE, "clips.jsonl")
+RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+BOOT = os.path.join(RUN, "clip-boot")
+SKIP = os.path.join(RUN, "clip-skip")
+KEEP = 200
+LIMIT = 200_000
 
-labels=$(printf '%s\n' "$list" | awk -v w="$width" '
-{
-    s = $0
-    sub(/^[0-9]+\t/, "", s)
-    gsub(/[[:space:]]+/, " ", s)
-    sub(/^ /, "", s)
-    sub(/ $/, "", s)
-    if (s ~ /^\[\[ binary data .* \]\]$/) {
-        n = split(s, p, " ")
-        s = "image " p[n - 1] " " p[n - 2]
-    } else if (s ~ /^[\/~][^ ]*$/ && length(s) > w) {
-        t = substr(s, length(s) - w + 2)
-        sub(/^[^\/]*/, "", t)
-        s = "…" t
-    }
-    if (length(s) > w) s = substr(s, 1, w - 1) "…"
-    while (s in seen) s = s " "
-    seen[s] = 1
-    print s
-}')
 
-sel=$(printf '%s\n' "$labels" | tofi --placeholder-text=clip --placeholder-color=#4C8581 --fuzzy-match=false)
-[ -n "$sel" ] || exit 0
+def load():
+    clips = []
+    try:
+        with open(CLIPS, encoding="utf-8") as f:
+            for line in f:
+                try:
+                    c = json.loads(line)
+                    clips.append({"t": int(c["t"]), "s": str(c["s"])})
+                except (ValueError, KeyError, TypeError):
+                    pass
+    except OSError:
+        pass
+    return clips
 
-row=$(printf '%s\n' "$labels" | awk -v s="$sel" '$0 == s { print NR; exit }')
-[ -n "$row" ] || exit 0
 
-printf '%s\n' "$list" | sed -n "${row}p" | cliphist decode | wl-copy
-case "$sel" in
-    "image "*) ;;
-    *) wl-paste -n | wl-copy --primary ;;
-esac
-sleep 0.08
-wtype -M shift -k Insert -m shift
+def save(clips):
+    os.makedirs(STATE, exist_ok=True)
+    with open(CLIPS + ".new", "w", encoding="utf-8") as f:
+        for c in clips:
+            f.write(json.dumps(c, ensure_ascii=False) + "\n")
+    os.replace(CLIPS + ".new", CLIPS)
+
+
+def locked():
+    os.makedirs(STATE, exist_ok=True)
+    lock = open(os.path.join(STATE, "lock"), "w")
+    fcntl.flock(lock, fcntl.LOCK_EX)
+    return lock
+
+
+def add(text, when):
+    lock = locked()
+    clips = [c for c in load() if c["s"] != text]
+    clips.insert(0, {"t": int(when), "s": text})
+    save(clips[:KEEP])
+    lock.close()
+
+
+def concealed():
+    types = subprocess.run(["wl-paste", "--list-types"], capture_output=True, text=True).stdout.split()
+    if "x-kde-passwordManagerHint" not in types:
+        return False
+    hint = subprocess.run(["wl-paste", "--no-newline", "--type", "x-kde-passwordManagerHint"],
+                          capture_output=True, text=True).stdout
+    return hint.strip() == "secret"
+
+
+def skipped(text):
+    try:
+        with open(SKIP) as f:
+            mark = f.read().strip()
+    except OSError:
+        return False
+    if mark != hashlib.sha256(text.encode()).hexdigest():
+        return False
+    os.unlink(SKIP)
+    return True
+
+
+def store():
+    data = sys.stdin.buffer.read()
+    try:
+        if time.time() - os.path.getmtime(BOOT) < 1.0:
+            return
+    except OSError:
+        pass
+    text = data.decode("utf-8", errors="replace")
+    if not text.strip() or len(text) > LIMIT:
+        return
+    if skipped(text) or concealed():
+        return
+    add(text, time.time())
+
+
+def watch():
+    with open(BOOT, "w"):
+        pass
+    os.execvp("wl-paste", ["wl-paste", "--type", "text", "--watch", os.path.realpath(__file__), "store"])
+
+
+def offer(text):
+    data = text.encode()
+    subprocess.run(["wl-copy"], input=data)
+    subprocess.run(["wl-copy", "--primary"], input=data)
+
+
+def put(when, index, how):
+    clips = load()
+    pick = None
+    if index < len(clips) and clips[index]["t"] == when:
+        pick = clips[index]
+    else:
+        pick = next((c for c in clips if c["t"] == when), None)
+    if pick is None:
+        return
+    offer(pick["s"])
+    if how == "paste":
+        time.sleep(0.08)
+        subprocess.run(["wtype", "-M", "shift", "-k", "Insert", "-m", "shift"])
+
+
+def putfile(path):
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    os.unlink(path)
+    if text:
+        offer(text)
+
+
+def cliphist():
+    out = subprocess.run(["cliphist", "list"], capture_output=True).stdout
+    lock = locked()
+    clips = load()
+    have = {c["s"] for c in clips}
+    for line in out.decode(errors="replace").splitlines():
+        ident = line.partition("\t")[0]
+        if not ident.isdigit() or "\t[[ binary data " in line:
+            continue
+        data = subprocess.run(["cliphist", "decode"], input=f"{ident}\t".encode(), capture_output=True).stdout
+        text = data.decode("utf-8", errors="replace")
+        if text.strip() and len(text) <= LIMIT and text not in have:
+            have.add(text)
+            clips.append({"t": 0, "s": text})
+    save(clips[:KEEP])
+    lock.close()
+    print(len(clips[:KEEP]))
+
+
+def main():
+    verb = sys.argv[1] if len(sys.argv) > 1 else "toggle"
+    if verb == "watch":
+        watch()
+    elif verb == "store":
+        store()
+    elif verb == "put":
+        put(int(sys.argv[2]), int(sys.argv[3]), sys.argv[4])
+    elif verb == "putfile":
+        putfile(sys.argv[2])
+    elif verb == "cliphist":
+        cliphist()
+    else:
+        subprocess.run(["qs", "-c", "clip", "ipc", "call", "clip", verb])
+
+
+if __name__ == "__main__":
+    main()

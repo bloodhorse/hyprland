@@ -28,7 +28,6 @@ keyd                  # GAP: not installed on miniarch as of the inventory
 
 # ── clipboard ──────────────────────────────────────────────────────────
 wl-clipboard          # wl-copy / wl-paste; the cliphist listener in exec-once needs it
-cliphist
 wtype                 # synthesises keystrokes for the F15/F16 and mouse-button binds
 
 # ── audio ──────────────────────────────────────────────────────────────
