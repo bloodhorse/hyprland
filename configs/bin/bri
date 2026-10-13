@@ -59,5 +59,4 @@ esac
 
 [ "$ddc" = 1 ] && echo "$cur" > "$cache"
 if [ "$ddc" = 0 ]; then level=$gamma; elif [ "$cur" -gt 0 ]; then level=$((50 + cur / 2)); else level=$((gamma / 2)); fi
-swayosd-client --custom-icon display-brightness-symbolic --custom-progress-text "$level%" \
-    --custom-progress "$(awk "BEGIN{printf \"%.2f\", $level/100}")" 2>/dev/null
+qs -c osd ipc call osd pop brightness Display "$(awk "BEGIN{printf \"%.2f\", $level/100}")" 2>/dev/null

@@ -3,12 +3,15 @@ sink=@DEFAULT_AUDIO_SINK@
 case "$1" in
     up)
         wpctl set-mute $sink 0
-        swayosd-client --output-volume raise --max-volume 100 2>/dev/null || wpctl set-volume -l 1.0 $sink 5%+
+        wpctl set-volume -l 1.0 $sink 5%+
         ;;
     down)
-        swayosd-client --output-volume lower 2>/dev/null || wpctl set-volume $sink 5%-
+        wpctl set-volume $sink 5%-
         ;;
     mute)
-        swayosd-client --output-volume mute-toggle 2>/dev/null || wpctl set-mute $sink toggle
+        wpctl set-mute $sink toggle
         ;;
 esac
+v=$(wpctl get-volume $sink)
+case "$v" in *MUTED*) kind=mute ;; *) kind=volume ;; esac
+qs -c osd ipc call osd pop $kind Volume "$(echo "$v" | awk '{print $2}')" 2>/dev/null
