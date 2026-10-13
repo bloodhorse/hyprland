@@ -1,0 +1,9 @@
+[options]
+background = 000000
+scaling_mode = shrink
+overlay = false
+
+[binds]
+<space> = quit
+<Escape> = quit
+q = quit
