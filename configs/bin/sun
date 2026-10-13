@@ -1,0 +1,55 @@
+#!/bin/bash
+export HYPRLAND_INSTANCE_SIGNATURE=$(ls -t /run/user/1000/hypr | head -1)
+
+GAMMA_STEP=10
+TEMP_STEP=500
+DEFAULT_GAMMA=50
+DEFAULT_TEMP=3500
+
+ensure_running() {
+    if ! pgrep -x hyprsunset >/dev/null; then
+        hyprsunset --gamma "$DEFAULT_GAMMA" --temperature "$DEFAULT_TEMP" &
+        disown
+        sleep 0.3
+    fi
+}
+
+get_gamma() { hyprctl hyprsunset gamma 2>/dev/null | cut -d. -f1; }
+get_temp()  { hyprctl hyprsunset temperature 2>/dev/null | cut -d. -f1; }
+
+case "${1:-}" in
+    warm)
+        ensure_running
+        t=$(get_temp); new=$((t - TEMP_STEP)); [ "$new" -lt 1000 ] && new=1000
+        hyprctl hyprsunset temperature "$new" >/dev/null
+        echo "temperature $new (was $t)"
+        ;;
+    cool)
+        ensure_running
+        t=$(get_temp); new=$((t + TEMP_STEP)); [ "$new" -gt 6500 ] && new=6500
+        hyprctl hyprsunset temperature "$new" >/dev/null
+        echo "temperature $new (was $t)"
+        ;;
+    on)
+        ensure_running
+        echo "gamma $(get_gamma) temperature $(get_temp)"
+        ;;
+    off)
+        pkill -x hyprsunset 2>/dev/null && echo "off" || echo "not running"
+        ;;
+    [0-9]*)
+        ensure_running
+        hyprctl hyprsunset gamma "$1" >/dev/null
+        echo "gamma $1"
+        ;;
+    "")
+        if pgrep -x hyprsunset >/dev/null; then
+            echo "gamma $(get_gamma) temperature $(get_temp)"
+        else
+            echo "off"
+        fi
+        ;;
+    *)
+        echo "sun [warm|cool|on|off|<gamma 0-100>]"
+        ;;
+esac
