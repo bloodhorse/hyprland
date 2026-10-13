@@ -10,6 +10,7 @@ Scope {
     property int pick: 0
     property bool open: false
     property bool editing: false
+    property string now: ""
     property string home: Quickshell.env("HOME")
     property string tool: home + "/.local/bin/clip"
     property string scratch: Quickshell.env("XDG_RUNTIME_DIR") + "/clip-edit"
@@ -94,6 +95,8 @@ Scope {
     }
 
     function show() {
+        var d = new Date()
+        now = two(d.getHours()) + ":" + two(d.getMinutes())
         input.text = ""
         store.reload()
         editing = false
@@ -150,7 +153,7 @@ Scope {
     PanelWindow {
         visible: root.open
         implicitWidth: 384
-        implicitHeight: 312
+        implicitHeight: Theme.head + root.rows * root.rowH + 6
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
@@ -184,11 +187,21 @@ Scope {
                 font.pointSize: Theme.size
             }
 
+            Text {
+                anchors.right: parent.right
+                anchors.rightMargin: 24
+                y: 33 - height / 2
+                text: root.now
+                color: Theme.dim
+                font.family: Theme.mono
+                font.pointSize: Theme.small
+            }
+
             TextInput {
                 id: input
                 x: 62
                 y: 33 - height / 2
-                width: parent.width - 62 - 24
+                width: parent.width - 62 - 80
                 clip: true
                 focus: true
                 color: Theme.body
@@ -219,7 +232,7 @@ Scope {
             ListView {
                 id: list
                 x: 0
-                y: 69 - root.rowH / 2
+                y: Theme.head
                 width: parent.width
                 height: root.rows * root.rowH
                 clip: true

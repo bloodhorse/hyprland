@@ -16,6 +16,9 @@ Singleton {
     readonly property string mono: look.font
     readonly property int size: look.size
     readonly property int radius: look.radius
+    readonly property int small: 10
+    readonly property real rowH: 36.6
+    readonly property real head: 75.5
 
     FileView {
         path: Quickshell.shellPath("palette.json")

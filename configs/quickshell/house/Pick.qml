@@ -11,6 +11,12 @@ Scope {
     property bool open: false
     property bool harm: false
     readonly property real rowH: 36.6
+    readonly property real top: harm ? Theme.head : 9
+    readonly property var crowd: {
+        var n = {}
+        for (var i = 0; i < wins.length; i++) n[wins[i].class] = (n[wins[i].class] || 0) + 1
+        return n
+    }
     readonly property color mark: harm ? Theme.harm : Theme.pick
     readonly property var shifted: [Qt.Key_Exclam, Qt.Key_At, Qt.Key_NumberSign, Qt.Key_Dollar, Qt.Key_Percent,
                                     Qt.Key_AsciiCircum, Qt.Key_Ampersand, Qt.Key_Asterisk, Qt.Key_ParenLeft]
@@ -105,7 +111,7 @@ Scope {
     PanelWindow {
         visible: root.open
         implicitWidth: 600
-        implicitHeight: 69 - root.rowH / 2 + Math.max(1, root.wins.length) * root.rowH + 8
+        implicitHeight: root.top + Math.max(1, root.wins.length) * root.rowH + (root.harm ? 6 : 9)
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
@@ -140,6 +146,7 @@ Scope {
             }
 
             Text {
+                visible: root.harm
                 x: 30
                 y: 33 - height / 2
                 text: ">"
@@ -151,15 +158,16 @@ Scope {
             Text {
                 x: 62
                 y: 33 - height / 2
-                text: root.harm ? "force quit" : "windows"
-                color: root.harm ? Theme.harm : Theme.dim
+                visible: root.harm
+                text: "force quit"
+                color: Theme.harm
                 font.family: Theme.mono
                 font.pointSize: Theme.size
             }
 
             Rectangle {
                 x: 5
-                y: 69 - root.rowH / 2 + root.pick * root.rowH + (root.rowH - 35.4) / 2
+                y: root.top + root.pick * root.rowH + (root.rowH - 35.4) / 2
                 width: parent.width - 10
                 height: 35.4
                 color: Theme.band
@@ -173,7 +181,7 @@ Scope {
                     required property var modelData
                     required property int index
                     x: 0
-                    y: 69 - root.rowH / 2 + index * root.rowH
+                    y: root.top + index * root.rowH
                     width: parent.width
                     height: root.rowH
 
@@ -204,7 +212,7 @@ Scope {
                         anchors.rightMargin: 14
                         anchors.verticalCenter: parent.verticalCenter
                         elide: Text.ElideRight
-                        text: row.modelData.title
+                        text: root.harm || root.crowd[row.modelData.class] > 1 ? row.modelData.title : ""
                         color: Theme.body
                         opacity: row.index === root.pick ? 0.85 : 0.5
                         font.family: Theme.mono
@@ -216,7 +224,7 @@ Scope {
                         anchors.right: parent.right
                         anchors.rightMargin: 24
                         anchors.verticalCenter: parent.verticalCenter
-                        text: row.modelData.workspace.name
+                        text: "ws" + row.modelData.workspace.name
                         color: Theme.dim
                         font.family: Theme.mono
                         font.pointSize: 10

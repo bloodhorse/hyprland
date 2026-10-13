@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-pkill -x tofi-drun && exit
-look=$HOME/.config/quickshell/house/palette.json
-exec tofi-drun $(jq -r '"--background-color=\(.ground) --border-color=\(.edge) --prompt-color=\(.dim) --input-color=\(.body) --text-color=\(.body) --default-result-color=\(.body) --selection-color=\(.pick) --text-cursor-color=\(.pick) --selection-background=\(.band) --corner-radius=\(.radius) --font-size=\(.size)"' "$look")
