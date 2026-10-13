@@ -1,0 +1,11 @@
+[Unit]
+Description=hop: the mac's board and mouse, played into uinput
+After=tailscaled.service
+
+[Service]
+ExecStart=/usr/local/bin/hopd 100.69.218.90 4677 100.91.166.121
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

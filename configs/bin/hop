@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+sudo systemctl kill -s USR1 hopd
