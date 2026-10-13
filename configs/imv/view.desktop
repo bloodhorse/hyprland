@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=view
+Exec=/Users/bekh/.local/bin/view %f
+Type=Application
+NoDisplay=true
+MimeType=image/png;image/jpeg;image/webp;image/gif;image/bmp;image/tiff;image/svg+xml;image/avif;

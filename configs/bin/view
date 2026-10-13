@@ -1,0 +1,11 @@
+#!/bin/sh
+f="$1"
+[ -f "$f" ] || exec imv "$@"
+d=$(magick identify -format '%w %h' "$f[0]" 2>/dev/null)
+m=$(hyprctl monitors -j | jq -r '.[]|select(.focused)|"\(.width/.scale|floor) \(.height/.scale|floor)"')
+set -- $d $m
+[ $# -eq 4 ] || exec imv "$f"
+w=$1; h=$2; mw=$(( $3 * 90 / 100 )); mh=$(( $4 * 90 / 100 ))
+if [ "$w" -gt "$mw" ]; then h=$(( h * mw / w )); w=$mw; fi
+if [ "$h" -gt "$mh" ]; then w=$(( w * mh / h )); h=$mh; fi
+exec imv -W "$w" -H "$h" "$f"
