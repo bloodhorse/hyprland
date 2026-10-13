@@ -16,7 +16,13 @@ static struct { const char *n; int c; } T[] = {
     {"f1",KEY_F1},{"f2",KEY_F2},{"f7",KEY_F7},{"f8",KEY_F8},{"f9",KEY_F9},{"f10",KEY_F10},{"f11",KEY_F11},{"f12",KEY_F12},
     {0,0}};
 
-static int fd;
+static int fd, mfd;
+static void mev(int type, int code, int val) {
+    struct input_event e = {0};
+    e.type = type; e.code = code; e.value = val;
+    if (write(mfd, &e, sizeof e) < 0) perror("write");
+}
+static void click(void) { mev(EV_KEY, BTN_LEFT, 1); mev(EV_SYN, SYN_REPORT, 0); usleep(30000); mev(EV_KEY, BTN_LEFT, 0); mev(EV_SYN, SYN_REPORT, 0); usleep(60000); }
 static void ev(int type, int code, int val) {
     struct input_event e = {0};
     e.type = type; e.code = code; e.value = val;
@@ -38,8 +44,18 @@ int main(int argc, char **argv) {
     strcpy(s.name, "Lily58 stand-in");
     ioctl(fd, UI_DEV_SETUP, &s);
     ioctl(fd, UI_DEV_CREATE);
+    mfd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
+    ioctl(mfd, UI_SET_EVBIT, EV_KEY); ioctl(mfd, UI_SET_KEYBIT, BTN_LEFT); ioctl(mfd, UI_SET_KEYBIT, BTN_RIGHT);
+    ioctl(mfd, UI_SET_EVBIT, EV_REL); ioctl(mfd, UI_SET_RELBIT, REL_X); ioctl(mfd, UI_SET_RELBIT, REL_Y);
+    struct uinput_setup ms = {0};
+    ms.id.bustype = BUS_USB; ms.id.vendor = 0x1234; ms.id.product = 0x5678;
+    strcpy(ms.name, "stand-in mouse");
+    ioctl(mfd, UI_DEV_SETUP, &ms);
+    ioctl(mfd, UI_DEV_CREATE);
     sleep(2);
     for (int a = 1; a < argc; a++) {
+        if (!strcmp(argv[a], "click")) { click(); continue; }
+        if (!strcmp(argv[a], "click2")) { click(); click(); usleep(150000); continue; }
         if (!strncmp(argv[a], "wait:", 5)) { usleep(atoi(argv[a] + 5) * 1000); continue; }
         int ks[8], n = 0;
         char *dup = strdup(argv[a]);
@@ -50,6 +66,7 @@ int main(int argc, char **argv) {
     }
     usleep(300000);
     ioctl(fd, UI_DEV_DESTROY);
+    ioctl(mfd, UI_DEV_DESTROY);
     close(fd);
     return 0;
 }
