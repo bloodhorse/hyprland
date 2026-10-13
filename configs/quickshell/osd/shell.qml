@@ -28,13 +28,6 @@ ShellRoot {
     Pill {}
 
     Timer {
-        interval: 40
-        running: root.shown
-        repeat: true
-        onTriggered: line.requestPaint()
-    }
-
-    Timer {
         id: hide
         interval: 1200
         onTriggered: root.shown = false
@@ -85,9 +78,6 @@ ShellRoot {
                     if (end < 1)
                         return
                     var tail = Math.min(22, end)
-                    var ys = []
-                    for (var x = 0; x <= end; x += 2)
-                        ys.push(mid + (Math.random() - 0.5) * 1.4)
                     var strokes = [[6.0, 0.10], [3.0, 0.22], [0.8, 1.0]]
                     for (var s = 0; s < 3; s++) {
                         var g = c.createLinearGradient(0, 0, end, 0)
@@ -96,9 +86,8 @@ ShellRoot {
                         g.addColorStop(Math.max(0, (end - tail) / end), col)
                         g.addColorStop(1, Qt.rgba(0.2375, 0.95, 0.95, 0))
                         c.beginPath()
-                        c.moveTo(0, ys[0])
-                        for (var i = 1; i < ys.length; i++)
-                            c.lineTo(i * 2, ys[i])
+                        c.moveTo(0, mid)
+                        c.lineTo(end, mid)
                         c.lineWidth = strokes[s][0]
                         c.strokeStyle = g
                         c.stroke()
