@@ -28,6 +28,13 @@ ShellRoot {
     Pill {}
 
     Timer {
+        interval: 40
+        running: root.shown
+        repeat: true
+        onTriggered: line.requestPaint()
+    }
+
+    Timer {
         id: hide
         interval: 1200
         onTriggered: root.shown = false
@@ -67,21 +74,33 @@ ShellRoot {
                     var w = width, mid = height / 2
                     var a = root.muted ? 0.35 : 1
                     c.lineCap = "round"
+                    c.lineJoin = "round"
                     c.beginPath()
                     c.moveTo(0, mid)
                     c.lineTo(w, mid)
                     c.lineWidth = 0.8
-                    c.strokeStyle = Qt.rgba(0.2375, 0.95, 0.95, 0.18)
+                    c.strokeStyle = Qt.rgba(0.2375, 0.95, 0.95, 0.14)
                     c.stroke()
-                    if (root.drawn <= 0.001)
+                    var end = w * root.drawn
+                    if (end < 1)
                         return
-                    var strokes = [[6.0, 0.10], [3.0, 0.22], [1.6, 1.0]]
+                    var tail = Math.min(22, end)
+                    var ys = []
+                    for (var x = 0; x <= end; x += 2)
+                        ys.push(mid + (Math.random() - 0.5) * 1.4)
+                    var strokes = [[6.0, 0.10], [3.0, 0.22], [0.8, 1.0]]
                     for (var s = 0; s < 3; s++) {
+                        var g = c.createLinearGradient(0, 0, end, 0)
+                        var col = Qt.rgba(0.2375, 0.95, 0.95, strokes[s][1] * a)
+                        g.addColorStop(0, col)
+                        g.addColorStop(Math.max(0, (end - tail) / end), col)
+                        g.addColorStop(1, Qt.rgba(0.2375, 0.95, 0.95, 0))
                         c.beginPath()
-                        c.moveTo(0, mid)
-                        c.lineTo(w * root.drawn, mid)
+                        c.moveTo(0, ys[0])
+                        for (var i = 1; i < ys.length; i++)
+                            c.lineTo(i * 2, ys[i])
                         c.lineWidth = strokes[s][0]
-                        c.strokeStyle = Qt.rgba(0.2375, 0.95, 0.95, strokes[s][1] * a)
+                        c.strokeStyle = g
                         c.stroke()
                     }
                 }
