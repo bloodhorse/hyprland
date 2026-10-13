@@ -17,12 +17,14 @@ Nothing here may stop, reconfigure, or uninstall any part of that. Every script 
 to be re-runnable on a machine that is already doing its job.
 
 **2. It is a T2 Mac.** It boots `linux-t2` with `apple-bcm-firmware`, `t2fanrd` and
-`apple-t2-audio-config`. Nothing in this repo installs, replaces, or upgrades a kernel,
-bootloader or firmware package, and no script runs `pacman -Syu`. `00-packages.sh` has a
-hard refuse-list for exactly those names. Wi-Fi, fans and audio all hang off that stack.
+`apple-t2-audio-config`, all installed from outside the repos. Nothing in this repo installs,
+replaces, or upgrades those: `00-packages.sh` has a hard refuse-list for exactly those names.
+Wi-Fi, fans and audio all hang off that stack. A full `sudo pacman -Syu` cannot reach them and
+is how the box is kept current (done 2026-10-13, 310 packages, clean); restart navidrome,
+jellyfin, audiobookshelf and caddy after one.
 
-Working in our favour: root is btrfs on nvme with **snapper + snap-pac**, so every pacman
-transaction gets an automatic pre/post snapshot. There is a rollback.
+Root is btrfs on nvme. snapper and snap-pac are installed but **no snapper config exists, so
+nothing snapshots automatically**; a way back before a risky change is a snapshot made by hand.
 
 ## Status
 
