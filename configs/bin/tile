@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+conf=~/tower/temper/hyprland/configs/hypr
+link=~/.local/state/hypr-layout.conf
+full=${XDG_RUNTIME_DIR:-/tmp}/tile-full
+
+state() { [ "$(readlink "$link")" = "$conf/tile.conf" ] && echo on || echo off; }
+
+windows() { hyprctl clients -j | jq -r '.[] | select(.class != "dropterm" and .class != "imv" and .mapped) | .address'; }
+
+case "${1:-toggle}" in
+state) state ;;
+pop)
+    if [ "$(state)" = off ]; then
+        hyprctl --batch "dispatch fullscreenstate 0 0; dispatch resizeactive exact 62% 72%; dispatch centerwindow" >/dev/null
+        exit
+    fi
+    hyprctl dispatch togglefloating >/dev/null
+    if [ "$(hyprctl activewindow -j | jq -r .floating)" = true ]; then
+        hyprctl --batch "dispatch resizeactive exact 62% 72%; dispatch centerwindow" >/dev/null
+    fi
+    ;;
+on)
+    ln -sfn "$conf/tile.conf" "$link"
+    hyprctl reload >/dev/null
+    now=$(hyprctl activewindow -j | jq -r '.address // empty')
+    hyprctl clients -j | jq -r '.[] | select(.fullscreen == 1 and .class != "dropterm") | .address' >"$full"
+    while read -r a; do
+        hyprctl --batch "dispatch focuswindow address:$a; dispatch fullscreenstate 0 0" >/dev/null
+    done <"$full"
+    windows | while read -r a; do hyprctl dispatch settiled "address:$a" >/dev/null; done
+    [ -n "$now" ] && hyprctl dispatch focuswindow "address:$now" >/dev/null
+    echo tiling
+    ;;
+off)
+    ln -sfn "$conf/float.conf" "$link"
+    hyprctl reload >/dev/null
+    now=$(hyprctl activewindow -j | jq -r '.address // empty')
+    windows | while read -r a; do hyprctl dispatch setfloating "address:$a" >/dev/null; done
+    [ -f "$full" ] && while read -r a; do
+        hyprctl --batch "dispatch focuswindow address:$a; dispatch fullscreenstate 1 1" >/dev/null
+    done <"$full"
+    [ -n "$now" ] && hyprctl dispatch focuswindow "address:$now" >/dev/null
+    echo floating
+    ;;
+toggle) [ "$(state)" = on ] && exec "$0" off || exec "$0" on ;;
+*) echo "tile [on|off|state|pop]"; exit 2 ;;
+esac

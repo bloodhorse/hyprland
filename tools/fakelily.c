@@ -14,6 +14,7 @@ static struct { const char *n; int c; } T[] = {
     {"left",KEY_LEFT},{"right",KEY_RIGHT},{"up",KEY_UP},{"down",KEY_DOWN},
     {"alt",KEY_LEFTALT},{"ralt",KEY_RIGHTALT},{"cmd",KEY_LEFTMETA},{"rcmd",KEY_RIGHTMETA},{"ctrl",KEY_LEFTCTRL},{"lshift",KEY_LEFTSHIFT},{"rshift",KEY_RIGHTSHIFT},
     {"f1",KEY_F1},{"f2",KEY_F2},{"f7",KEY_F7},{"f8",KEY_F8},{"f9",KEY_F9},{"f10",KEY_F10},{"f11",KEY_F11},{"f12",KEY_F12},
+    {"kp2",KEY_KP2},{"kp4",KEY_KP4},{"kp5",KEY_KP5},{"kp6",KEY_KP6},{"kp8",KEY_KP8},
     {0,0}};
 
 static int fd, mfd;
