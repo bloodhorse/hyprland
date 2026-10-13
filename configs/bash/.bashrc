@@ -2,7 +2,6 @@
 # ~/.bashrc
 #
 
-_kc() { XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)} secret-tool lookup kc "$1" 2>/dev/null; }
 gh() { GH_TOKEN=$(_kc GITHUB_TOKEN_BLUEHORSE) command gh "$@"; }
 
 # If not running interactively, don't do anything
