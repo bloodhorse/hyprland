@@ -112,7 +112,7 @@ font=Inter,11,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
 fixed=JetBrainsMono Nerd Font,11,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
 
 [Icons]
-Theme=House
+Theme=Colloid-Teal-Dark
 
 [KDE]
 widgetStyle=Fusion

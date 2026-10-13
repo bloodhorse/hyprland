@@ -52,7 +52,7 @@ kde = (sect("View", mix(g, b, .035), mix(g, b, .06)) + sect("Window", g, mix(g, 
          f"inactiveForeground={t(mix(g, b, .55))}\n\n"
        + "[UiSettings]\nColorScheme=house\n\n[General]\nName=house\nColorScheme=house\nfont=Inter,11,-1,5,400,0,0,0,0,0,0,0,0,0,0,1\n"
          "fixed=JetBrainsMono Nerd Font,11,-1,5,400,0,0,0,0,0,0,0,0,0,0,1\n\n"
-       + "[Icons]\nTheme=House\n\n[KDE]\nwidgetStyle=Fusion\n")
+       + "[Icons]\nTheme=Colloid-Teal-Dark\n\n[KDE]\nwidgetStyle=Fusion\n")
 (repo / "configs/qt/kdeglobals").write_text(kde)
 home = pathlib.Path.home()
 (home / ".config/kdeglobals").write_text(kde)
