@@ -37,7 +37,7 @@ ShellRoot {
         visible: root.shown || glass.opacity > 0.01
         anchors { bottom: true }
         margins { bottom: 48 }
-        implicitWidth: 140
+        implicitWidth: 190
         implicitHeight: 44
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
