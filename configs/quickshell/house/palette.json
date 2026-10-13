@@ -1,0 +1,12 @@
+{
+  "font": "JetBrainsMono Nerd Font",
+  "size": 13,
+  "radius": 12,
+  "ground": "#0E1719C4",
+  "edge": "#FFFFFF22",
+  "body": "#D5ECE9",
+  "pick": "#7DE8DA",
+  "dim": "#4C8581",
+  "band": "#FFFFFF16",
+  "harm": "#FF6EC7"
+}

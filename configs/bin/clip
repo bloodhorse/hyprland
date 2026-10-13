@@ -157,7 +157,7 @@ def main():
     elif verb == "cliphist":
         cliphist()
     else:
-        subprocess.run(["qs", "-c", "clip", "ipc", "call", "clip", verb])
+        subprocess.run(["qs", "-c", "house", "ipc", "call", "clip", verb])
 
 
 if __name__ == "__main__":

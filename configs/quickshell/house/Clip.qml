@@ -3,7 +3,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 
-ShellRoot {
+Scope {
     id: root
     property var clips: []
     property var shown: []
@@ -14,19 +14,12 @@ ShellRoot {
     property string tool: home + "/.local/bin/clip"
     property string scratch: Quickshell.env("XDG_RUNTIME_DIR") + "/clip-edit"
 
-    readonly property color ground: Qt.rgba(0.055, 0.09, 0.098, 0.77)
-    readonly property color edge: Qt.rgba(1, 1, 1, 0.133)
-    readonly property color body: "#D5ECE9"
-    readonly property color cyan: "#7DE8DA"
-    readonly property color dim: "#4C8581"
-    readonly property color band: Qt.rgba(1, 1, 1, 0.086)
-    readonly property string mono: "JetBrainsMono Nerd Font"
     readonly property real rowH: 36.6
     readonly property int rows: 7
     readonly property int fit: Math.min(48, Math.floor((384 - 62 - 24 - 7 * smallM.advanceWidth) / monoM.advanceWidth))
 
-    TextMetrics { id: monoM; font.family: root.mono; font.pointSize: 13; text: "M" }
-    TextMetrics { id: smallM; font.family: root.mono; font.pointSize: 10; text: "M" }
+    TextMetrics { id: monoM; font.family: Theme.mono; font.pointSize: Theme.size; text: "M" }
+    TextMetrics { id: smallM; font.family: Theme.mono; font.pointSize: 10; text: "M" }
 
     function parse(text) {
         var out = []
@@ -166,9 +159,9 @@ ShellRoot {
 
         Rectangle {
             anchors.fill: parent
-            radius: 12
-            color: root.ground
-            border.color: root.edge
+            radius: Theme.radius
+            color: Theme.ground
+            border.color: Theme.edge
             border.width: 1
             clip: true
 
@@ -176,9 +169,9 @@ ShellRoot {
                 x: 30
                 y: 33 - height / 2
                 text: ">"
-                color: root.dim
-                font.family: root.mono
-                font.pointSize: 13
+                color: Theme.dim
+                font.family: Theme.mono
+                font.pointSize: Theme.size
             }
 
             Text {
@@ -186,9 +179,9 @@ ShellRoot {
                 y: 33 - height / 2
                 visible: input.text.length === 0
                 text: "clip"
-                color: root.dim
-                font.family: root.mono
-                font.pointSize: 13
+                color: Theme.dim
+                font.family: Theme.mono
+                font.pointSize: Theme.size
             }
 
             TextInput {
@@ -198,10 +191,10 @@ ShellRoot {
                 width: parent.width - 62 - 24
                 clip: true
                 focus: true
-                color: root.body
-                font.family: root.mono
-                font.pointSize: 13
-                cursorDelegate: Rectangle { width: 2; color: root.cyan; visible: input.cursorVisible }
+                color: Theme.body
+                font.family: Theme.mono
+                font.pointSize: Theme.size
+                cursorDelegate: Rectangle { width: 2; color: Theme.pick; visible: input.cursorVisible }
                 onTextChanged: root.filter()
 
                 Keys.onPressed: event => {
@@ -241,7 +234,7 @@ ShellRoot {
                         y: (root.rowH - 35.4) / 2
                         width: list.width - 10
                         height: 35.4
-                        color: root.band
+                        color: Theme.band
                     }
                 }
 
@@ -256,9 +249,9 @@ ShellRoot {
                         x: 62
                         anchors.verticalCenter: parent.verticalCenter
                         text: root.label(row.modelData.s)
-                        color: row.index === root.pick ? root.cyan : root.body
-                        font.family: root.mono
-                        font.pointSize: 13
+                        color: row.index === root.pick ? Theme.pick : Theme.body
+                        font.family: Theme.mono
+                        font.pointSize: Theme.size
                     }
 
                     Text {
@@ -266,8 +259,8 @@ ShellRoot {
                         anchors.rightMargin: 24
                         anchors.verticalCenter: parent.verticalCenter
                         text: root.clock(row.modelData.t)
-                        color: root.dim
-                        font.family: root.mono
+                        color: Theme.dim
+                        font.family: Theme.mono
                         font.pointSize: 10
                     }
 
@@ -295,9 +288,9 @@ ShellRoot {
 
         Rectangle {
             anchors.fill: parent
-            radius: 12
-            color: root.ground
-            border.color: root.edge
+            radius: Theme.radius
+            color: Theme.ground
+            border.color: Theme.edge
             border.width: 1
 
             Flickable {
@@ -317,14 +310,14 @@ ShellRoot {
                 TextEdit {
                     id: editText
                     width: editView.width
-                    color: root.body
+                    color: Theme.body
                     selectionColor: Qt.rgba(1, 1, 1, 0.18)
-                    selectedTextColor: root.cyan
-                    font.family: root.mono
-                    font.pointSize: 13
+                    selectedTextColor: Theme.pick
+                    font.family: Theme.mono
+                    font.pointSize: Theme.size
                     wrapMode: TextEdit.Wrap
                     textFormat: TextEdit.PlainText
-                    cursorDelegate: Rectangle { width: 2; color: root.cyan; visible: editText.cursorVisible }
+                    cursorDelegate: Rectangle { width: 2; color: Theme.pick; visible: editText.cursorVisible }
                     onCursorRectangleChanged: editView.follow()
 
                     Keys.onPressed: event => {

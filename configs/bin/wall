@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 if [ -z "$1" ]; then
-    qs kill -c wall >/dev/null 2>&1 || exec qs -c wall
-    exit
+    exec qs -c house ipc call wall toggle
 fi
 kinds=(grow wave outer center wipe fade left right top bottom)
 spots=(center top-left top-right bottom-left bottom-right)
