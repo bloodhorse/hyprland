@@ -52,7 +52,7 @@ Scope {
         visible: pill.shown || glass.opacity > 0.01
         anchors { bottom: true }
         margins { bottom: 48 }
-        implicitWidth: 190
+        implicitWidth: 140
         implicitHeight: 44
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
