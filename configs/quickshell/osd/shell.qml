@@ -21,6 +21,8 @@ ShellRoot {
         }
     }
 
+    Pill {}
+
     Timer {
         id: hide
         interval: 1500
