@@ -9,6 +9,7 @@ import time
 RASI = os.path.expanduser("~/.config/rofi/")
 SKIP = {"dropterm"}
 KILL = "--kill" in sys.argv
+SHIFTED = ["exclam", "at", "numbersign", "dollar", "percent", "asciicircum", "ampersand", "asterisk", "parenleft"]
 
 
 def hyprctl_json(cmd):
@@ -37,12 +38,12 @@ def rofi(wins):
     cmd = ["rofi", "-no-config", "-dmenu", "-i", "-format", "i", "-no-custom", "-show-icons",
            "-theme", RASI + ("forcequit.rasi" if KILL else "winswitch.rasi"), "-selected-row", "0",
            "-kb-element-next", "", "-kb-element-prev", "", "-kb-mode-next", "Shift+Right",
-           "-kb-row-down", "Down,Tab,Alt+Tab,Control+n",
-           "-kb-row-up", "Up,ISO_Left_Tab,Alt+ISO_Left_Tab,Control+p"]
+           "-kb-row-down", "Down,Tab,Super+Tab,Control+n",
+           "-kb-row-up", "Up,ISO_Left_Tab,Super+ISO_Left_Tab,Control+p"]
     if KILL:
         cmd += ["-mesg", "force quit  ·  enter or digit kills  ·  esc leaves"]
-    for n in range(1, 10):
-        cmd += [f"-kb-custom-{n}", str(n), f"-kb-custom-{n + 9}", f"Control+{n}"]
+    for n, sym in zip(range(1, 10), SHIFTED):
+        cmd += [f"-kb-custom-{n}", str(n), f"-kb-custom-{n + 9}", f"Control+{n},Control+{sym}"]
     r = subprocess.run(cmd, input="\n".join(rows), capture_output=True, text=True)
     return r.returncode, r.stdout.strip()
 
