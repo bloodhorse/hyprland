@@ -64,32 +64,26 @@ ShellRoot {
                 onPaint: {
                     var c = getContext("2d")
                     c.reset()
-                    var w = width, mid = height / 2
+                    var w = width, mid = height / 2, x0 = 4
                     var a = root.muted ? 0.35 : 1
                     c.lineCap = "round"
                     c.lineJoin = "round"
                     c.beginPath()
-                    c.moveTo(0, mid)
-                    c.lineTo(w, mid)
+                    c.moveTo(x0, mid)
+                    c.lineTo(w - x0, mid)
                     c.lineWidth = 0.8
                     c.strokeStyle = Qt.rgba(0.2375, 0.95, 0.95, 0.14)
                     c.stroke()
-                    var end = w * root.drawn
-                    if (end < 1)
+                    var end = x0 + (w - 2 * x0) * root.drawn
+                    if (end < x0 + 1)
                         return
-                    var tail = Math.min(22, end)
                     var strokes = [[6.0, 0.10], [3.0, 0.22], [0.8, 1.0]]
                     for (var s = 0; s < 3; s++) {
-                        var g = c.createLinearGradient(0, 0, end, 0)
-                        var col = Qt.rgba(0.2375, 0.95, 0.95, strokes[s][1] * a)
-                        g.addColorStop(0, col)
-                        g.addColorStop(Math.max(0, (end - tail) / end), col)
-                        g.addColorStop(1, Qt.rgba(0.2375, 0.95, 0.95, 0))
                         c.beginPath()
-                        c.moveTo(0, mid)
+                        c.moveTo(x0, mid)
                         c.lineTo(end, mid)
                         c.lineWidth = strokes[s][0]
-                        c.strokeStyle = g
+                        c.strokeStyle = Qt.rgba(0.2375, 0.95, 0.95, strokes[s][1] * a)
                         c.stroke()
                     }
                 }
