@@ -1,0 +1,33 @@
+#!/bin/bash
+set -e
+src=/usr/share/icons/Papirus
+dst=$HOME/.local/share/icons/House
+tint=${1:-teal}
+[ -d "$dst" ] && gio trash "$dst"
+mkdir -p "$dst"
+dirs=()
+for d in "$src"/*/places; do
+    size=$(basename "$(dirname "$d")")
+    [ -L "$src/$size" ] && continue
+    ls "$d" | grep -q -- "-$tint" || continue
+    mkdir -p "$dst/$size/places"
+    for f in "$d"/*-"$tint"*.svg; do
+        n=$(basename "$f")
+        ln -s "$f" "$dst/$size/places/${n/-$tint/}"
+    done
+    for l in "$d"/*.svg; do
+        [ -L "$l" ] || continue
+        t=$(basename "$(readlink -f "$l")")
+        case $t in *-blue*) ;; *) continue ;; esac
+        [ -e "$d/${t/-blue/-$tint}" ] && ln -sf "$d/${t/-blue/-$tint}" "$dst/$size/places/$(basename "$l")"
+    done
+    dirs+=("$size/places")
+done
+{
+    printf '[Icon Theme]\nName=House\nInherits=Papirus-Dark,breeze-dark,hicolor\nDirectories=%s\n' "$(IFS=,; echo "${dirs[*]}")"
+    for d in "${dirs[@]}"; do
+        s=${d%%x*}
+        printf '\n[%s]\nContext=Places\nSize=%s\nType=Fixed\n' "$d" "$s"
+    done
+} > "$dst/index.theme"
+echo "house-icons: ${#dirs[@]} sizes, $tint folders"

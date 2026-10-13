@@ -1,0 +1,76 @@
+#!/bin/bash
+set -e
+repo=$(dirname "$(dirname "$(dirname "$(readlink -f "$0")")")")
+exec uv run --no-project python - "$repo" <<'PY'
+import json, sys, pathlib
+repo = pathlib.Path(sys.argv[1])
+p = json.load(open(repo / "configs/quickshell/house/palette.json"))
+rgb = lambda h: tuple(int(h[i:i+2], 16) for i in (1, 3, 5))
+hexs = lambda c: "#%02x%02x%02x" % tuple(round(x) for x in c)
+mix = lambda a, b, t: hexs(tuple(x + (y - x) * t for x, y in zip(rgb(a), rgb(b))))
+g, b, pick, dim, harm = (p[k][:7] for k in ("ground", "body", "pick", "dim", "harm"))
+c = {
+    "window_bg_color": g, "window_fg_color": b,
+    "view_bg_color": mix(g, b, .035), "view_fg_color": b,
+    "headerbar_bg_color": g, "headerbar_fg_color": b,
+    "headerbar_border_color": mix(g, b, .14), "headerbar_backdrop_color": g,
+    "headerbar_shade_color": mix(g, "#000000", .4),
+    "sidebar_bg_color": mix(g, b, .02), "sidebar_fg_color": b,
+    "sidebar_backdrop_color": mix(g, b, .02), "sidebar_shade_color": mix(g, "#000000", .3),
+    "secondary_sidebar_bg_color": mix(g, b, .03), "secondary_sidebar_fg_color": b,
+    "card_bg_color": mix(g, b, .07), "card_fg_color": b, "card_shade_color": mix(g, "#000000", .4),
+    "dialog_bg_color": mix(g, b, .055), "dialog_fg_color": b,
+    "popover_bg_color": mix(g, b, .055), "popover_fg_color": b,
+    "thumbnail_bg_color": mix(g, b, .07), "thumbnail_fg_color": b,
+    "shade_color": mix(g, "#000000", .4), "scrollbar_outline_color": mix(g, "#000000", .5),
+    "accent_color": pick, "accent_bg_color": pick, "accent_fg_color": g,
+    "destructive_color": harm, "destructive_bg_color": harm, "destructive_fg_color": g,
+    "error_color": harm, "error_bg_color": harm, "error_fg_color": g,
+    "success_color": pick, "success_bg_color": dim, "success_fg_color": b,
+    "warning_color": mix(pick, b, .5), "warning_bg_color": dim, "warning_fg_color": b,
+}
+css = "".join(f"@define-color {k} {v};\n" for k, v in c.items())
+(repo / "configs/gtk/gtk.css").write_text(css)
+vars4 = ":root {\n" + "".join(f"  --{k.replace('_', '-')}: {v};\n" for k, v in c.items()) + "}\n"
+(repo / "configs/gtk/gtk4.css").write_text(css + vars4)
+t = lambda h: ",".join(str(x) for x in rgb(h))
+def sect(name, bg, alt):
+    return (f"[Colors:{name}]\nBackgroundNormal={t(bg)}\nBackgroundAlternate={t(alt)}\n"
+            f"ForegroundNormal={t(b)}\nForegroundInactive={t(mix(g, b, .55))}\n"
+            f"ForegroundActive={t(pick)}\nForegroundLink={t(pick)}\nForegroundVisited={t(dim)}\n"
+            f"ForegroundNegative={t(harm)}\nForegroundNeutral={t(mix(pick, b, .5))}\n"
+            f"ForegroundPositive={t(pick)}\nDecorationFocus={t(pick)}\nDecorationHover={t(pick)}\n\n")
+kde = (sect("View", mix(g, b, .035), mix(g, b, .06)) + sect("Window", g, mix(g, b, .03))
+       + sect("Button", mix(g, b, .10), mix(g, b, .14)) + sect("Tooltip", mix(g, b, .10), mix(g, b, .10))
+       + sect("Header", g, mix(g, b, .03)) + sect("Complementary", g, mix(g, b, .03))
+       + f"[Colors:Selection]\nBackgroundNormal={t(pick)}\nBackgroundAlternate={t(dim)}\n"
+         f"ForegroundNormal={t(g)}\nForegroundInactive={t(g)}\nForegroundActive={t(g)}\n"
+         f"ForegroundLink={t(g)}\nForegroundVisited={t(g)}\nForegroundNegative={t(harm)}\n"
+         f"ForegroundNeutral={t(g)}\nForegroundPositive={t(g)}\nDecorationFocus={t(pick)}\n"
+         f"DecorationHover={t(pick)}\n\n"
+       + f"[WM]\nactiveBackground={t(g)}\nactiveForeground={t(b)}\ninactiveBackground={t(g)}\n"
+         f"inactiveForeground={t(mix(g, b, .55))}\n\n"
+       + "[UiSettings]\nColorScheme=house\n\n[General]\nName=house\nColorScheme=house\nfont=Inter,11,-1,5,400,0,0,0,0,0,0,0,0,0,0,1\n"
+         "fixed=JetBrainsMono Nerd Font,11,-1,5,400,0,0,0,0,0,0,0,0,0,0,1\n\n"
+       + "[Icons]\nTheme=House\n\n[KDE]\nwidgetStyle=Fusion\n")
+(repo / "configs/qt/kdeglobals").write_text(kde)
+home = pathlib.Path.home()
+(home / ".config/kdeglobals").write_text(kde)
+schemes = home / ".local/share/color-schemes"
+schemes.mkdir(parents=True, exist_ok=True)
+(schemes / "house.colors").write_text(kde)
+a = lambda h: "#ff" + h[1:]
+roles = [b, mix(g, b, .10), mix(g, b, .22), mix(g, b, .16), mix(g, "#000000", .5), mix(g, b, .08),
+         b, "#ffffff", b, mix(g, b, .035), g, "#000000", pick, g, pick, dim,
+         mix(g, b, .06), b, mix(g, b, .10), b]
+off = mix(g, b, .40)
+dis = list(roles)
+for i in (0, 6, 8, 13): dis[i] = off
+line = lambda r, ph: ", ".join(a(x) for x in r) + ", " + ph
+(repo / "configs/qt/house.conf").write_text(
+    "[ColorScheme]\n"
+    f"active_colors={line(roles, '#80' + b[1:])}\n"
+    f"disabled_colors={line(dis, '#50' + b[1:])}\n"
+    f"inactive_colors={line(roles, '#80' + b[1:])}\n")
+print("skin: gtk.css and qt colours written from palette.json")
+PY
