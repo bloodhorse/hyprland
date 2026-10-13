@@ -1,0 +1,2 @@
+#!/bin/sh
+curl -sf -m 10 http://100.91.166.121:7842/cu || echo "cu: the mac is not answering" >&2
