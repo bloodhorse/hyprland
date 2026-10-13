@@ -1,4 +1,41 @@
 #!/bin/sh
-sel=$(cliphist list | fuzzel --dmenu --with-nth=2 -p "clip  " --width 72 --lines 14 \
-    --border-color=89dcebff --prompt-color=89dcebff --match-color=89dcebff --selection-match-color=89dcebff)
-[ -n "$sel" ] && printf '%s' "$sel" | cliphist decode | wl-copy
+pkill -x tofi && exit 0
+
+width=${CLIP_WIDTH:-30}
+list=$(cliphist list)
+[ -n "$list" ] || exit 0
+
+labels=$(printf '%s\n' "$list" | awk -v w="$width" '
+{
+    s = $0
+    sub(/^[0-9]+\t/, "", s)
+    gsub(/[[:space:]]+/, " ", s)
+    sub(/^ /, "", s)
+    sub(/ $/, "", s)
+    if (s ~ /^\[\[ binary data .* \]\]$/) {
+        n = split(s, p, " ")
+        s = "image " p[n - 1] " " p[n - 2]
+    } else if (s ~ /^[\/~][^ ]*$/ && length(s) > w) {
+        t = substr(s, length(s) - w + 2)
+        sub(/^[^\/]*/, "", t)
+        s = "…" t
+    }
+    if (length(s) > w) s = substr(s, 1, w - 1) "…"
+    while (s in seen) s = s " "
+    seen[s] = 1
+    print s
+}')
+
+sel=$(printf '%s\n' "$labels" | tofi --placeholder-text=clip --placeholder-color=#4C8581 --fuzzy-match=false)
+[ -n "$sel" ] || exit 0
+
+row=$(printf '%s\n' "$labels" | awk -v s="$sel" '$0 == s { print NR; exit }')
+[ -n "$row" ] || exit 0
+
+printf '%s\n' "$list" | sed -n "${row}p" | cliphist decode | wl-copy
+case "$sel" in
+    "image "*) ;;
+    *) wl-paste -n | wl-copy --primary ;;
+esac
+sleep 0.08
+wtype -M shift -k Insert -m shift
