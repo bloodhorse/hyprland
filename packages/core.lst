@@ -38,7 +38,7 @@ playerctl             # bound to the XF86Audio media keys
 
 # ── screen ─────────────────────────────────────────────────────────────
 hyprsunset            # night light, bound to Super+N
-awww                  # [AUR] wallpaper daemon — the exec-once line; already installed
+awww                  # [AUR] wallpaper daemon — the exec-once line and the wall script
 grim                  # screenshots; no bind wired yet, but a mac transfer without them is a lie
 slurp                 # region select for grim
 hyprshot              # the screenshot binds (alt-shift-c, ctrl+shift+3/4)

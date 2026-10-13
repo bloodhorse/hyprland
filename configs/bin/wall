@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+if [ -z "$1" ]; then
+    qs kill -c wall >/dev/null 2>&1 || exec qs -c wall
+    exit
+fi
+kinds=(grow wave outer center wipe fade left right top bottom)
+spots=(center top-left top-right bottom-left bottom-right)
+awww img "$1" \
+    --transition-type "${kinds[RANDOM % ${#kinds[@]}]}" \
+    --transition-angle $((RANDOM % 8 * 45)) \
+    --transition-pos "${spots[RANDOM % ${#spots[@]}]}" \
+    --transition-step 140 \
+    --transition-fps 120
