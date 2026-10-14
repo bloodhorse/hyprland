@@ -1,4 +1,4 @@
-/* house skin for zen + nebula: night glass, a pastel blue pick, iosevka aile */
+/* house skin for zen + nebula: night glass, a pastel blue pick, apple's system face */
 
 :root {
   --house-ground: rgb(16 20 30);
@@ -7,7 +7,7 @@
   --house-pick: #a9c7ff;
   --house-dim: #7f8aa3;
   --house-band: rgb(255 255 255 / 9%);
-  --house-face: "Iosevka Aile", sans-serif;
+  --house-face: "System Font", "SF Pro Text", sans-serif;
 
   --var-nebula-glass-blur: 28px;
   --var-nebula-glass-saturation: 150%;
@@ -32,9 +32,9 @@
   --var-nebula-workspace-grayscale: 100%;
 
   --zen-primary-color: var(--house-pick) !important;
-  --zen-main-browser-background: rgb(16 20 30 / 74%) !important;
-  --zen-main-browser-background-toolbar: rgb(16 20 30 / 74%) !important;
-  --zen-themed-toolbar-bg-transparent: rgb(16 20 30 / 74%) !important;
+  --zen-main-browser-background: transparent !important;
+  --zen-main-browser-background-toolbar: transparent !important;
+  --zen-themed-toolbar-bg-transparent: transparent !important;
   --toolbarbutton-icon-fill: var(--house-body) !important;
   --toolbar-color: var(--house-body) !important;
 }
@@ -111,10 +111,13 @@ panel {
   background-color: rgb(169 199 255 / 30%) !important;
 }
 
-/* zen writes its space colour inline on these layers; paint over it with night blue */
-.zen-browser-generic-background::after,
+/* zen writes its space colour inline on these layers; one thin night-blue glass, the blur shows through */
 .zen-browser-generic-background::before {
-  background: linear-gradient(165deg, rgb(34 44 70 / 60%), rgb(17 21 32 / 64%) 55%, rgb(11 13 20 / 68%)) !important;
+  background: none !important;
+}
+
+.zen-browser-generic-background::after {
+  background: linear-gradient(165deg, rgb(34 44 70 / 34%), rgb(17 21 32 / 38%) 55%, rgb(11 13 20 / 44%)) !important;
 }
 
 /* no logo */
