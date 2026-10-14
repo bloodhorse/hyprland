@@ -13,6 +13,7 @@ Singleton {
     readonly property color dim: tone(look.dim)
     readonly property color band: tone(look.band)
     readonly property color harm: tone(look.harm)
+    readonly property color warn: tone(look.warn)
     readonly property string mono: look.font
     readonly property int size: look.size
     readonly property int radius: look.radius
@@ -38,6 +39,7 @@ Singleton {
             property string dim: "#4C8581"
             property string band: "#FFFFFF16"
             property string harm: "#FF6EC7"
+            property string warn: "#C58AB5"
         }
     }
 }

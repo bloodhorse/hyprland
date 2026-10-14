@@ -5,4 +5,5 @@ ShellRoot {
     Clip {}
     Pick {}
     Wall {}
+    Cu {}
 }
