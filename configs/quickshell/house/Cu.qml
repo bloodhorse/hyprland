@@ -161,6 +161,7 @@ Scope {
         active: root.here
 
         PanelWindow {
+            id: win
             property real shrink: 0.5
             implicitWidth: card.width * shrink
             implicitHeight: card.height * shrink
@@ -179,7 +180,7 @@ Scope {
                 id: card
                 width: 868
                 height: 348
-                scale: parent.shrink
+                scale: win.shrink
                 transformOrigin: Item.TopLeft
                 radius: Theme.radius
                 color: Theme.ground
