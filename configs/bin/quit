@@ -1,12 +1,28 @@
 #!/bin/sh
-# quit [--window]: end the focused app (cmd+q), or with --window close one window (k).
-# zen never ends: it is hidden on special:zen and N brings it back (zen-lane).
+# quit [--window|--hard]: cmd+q ends the focused app; --window (k) closes one window;
+# --hard (cmd+shift+q) ends it whatever it is.
+# Two apps never end on cmd+q, the window just goes (hypragain/docs/cmd-q.md):
+#   zen   → hidden alive on special:zen, N brings it back (zen-lane); k hides it too
+#   kitty → every kitty window to special:kitty, its shells alive; W and g bring them back
 w=$(hyprctl activewindow -j)
-if [ "$(printf '%s' "$w" | jq -r '.class // empty')" = zen ]; then
-  hyprctl dispatch movetoworkspacesilent special:zen >/dev/null
-  exit 0
+cls=$(printf '%s' "$w" | jq -r '.class // empty')
+
+if [ "$1" != --hard ]; then
+  case "$cls" in
+    zen)
+      hyprctl dispatch movetoworkspacesilent special:zen >/dev/null
+      exit 0 ;;
+    kitty)
+      if [ "$1" != --window ]; then
+        for a in $(hyprctl clients -j | jq -r '.[] | select(.class == "kitty") | .address'); do
+          hyprctl dispatch movetoworkspacesilent "special:kitty,address:$a" >/dev/null
+        done
+        exit 0
+      fi ;;
+  esac
+  [ "$1" = --window ] && exec hyprctl dispatch killactive >/dev/null
 fi
-[ "$1" = --window ] && exec hyprctl dispatch killactive >/dev/null
+
 pid=$(printf '%s' "$w" | jq -r ".pid // empty")
 case "$pid" in ""|*[!0-9]*) exit 0 ;; esac
 [ "$pid" -gt 1 ] || exit 0

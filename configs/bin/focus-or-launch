@@ -50,6 +50,19 @@ def main():
 
     # Stable order so repeated presses walk every window in the same circle.
     clients.sort(key=lambda c: c["address"])
+
+    # Windows that cmd+q put away (quit stashes kitty on special:kitty) come back here.
+    stashed = [c for c in clients
+               if c["workspace"]["name"] == "special:" + c.get("class", "")]
+    if stashed:
+        here = (hyprctl_json("activeworkspace") or {}).get("id")
+        for c in stashed:
+            subprocess.run(["hyprctl", "dispatch", "movetoworkspacesilent",
+                            f"{here},address:{c['address']}"], capture_output=True)
+        subprocess.run(["hyprctl", "dispatch", "focuswindow",
+                        f"address:{stashed[0]['address']}"], capture_output=True)
+        return
+
     addrs = [c["address"] for c in clients]
 
     active = hyprctl_json("activewindow") or {}
