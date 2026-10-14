@@ -58,6 +58,8 @@ var tapPort: CFMachPort?
 var lastPong = Date()
 let pongLock = NSLock()
 var child: pid_t = 0
+var seenTypes = Set<Int64>()
+let virtualType: Int64 = 46
 
 func now() -> Int32 { Int32(truncatingIfNeeded: Int(Date().timeIntervalSince1970 * 1_000_000) & 0x7FFF_FFFF) }
 
@@ -289,12 +291,18 @@ func run(_ args: [String]) -> Never {
             put(MOUSE, EV_SYN, 0, 0)
         }
     }
-    let mask: CGEventMask = (1 << 10) | (1 << 11) | (1 << 12) | (1 << 14)
+    let mask: CGEventMask = (1 << 10) | (1 << 11) | (1 << 12)
     tapPort = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap, eventsOfInterest: mask, callback: { _, type, event, _ in
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
             if let t = tapPort { CGEvent.tapEnable(tap: t, enable: true) }
             return Unmanaged.passUnretained(event)
         }
+        let kt = event.getIntegerValueField(.keyboardEventKeyboardType)
+        if !seenTypes.contains(kt) {
+            seenTypes.insert(kt)
+            log("keyboard type \(kt), key \(event.getIntegerValueField(.keyboardEventKeycode))")
+        }
+        if kt != virtualType { return Unmanaged.passUnretained(event) }
         return nil
     }, userInfo: nil)
     guard let tap = tapPort else { lost("no event tap: the terminal needs Accessibility") }
