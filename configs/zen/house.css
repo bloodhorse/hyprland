@@ -1,19 +1,20 @@
-/* house skin for zen + nebula: the desk's palette.json (ground, edge, body, pick, dim, band) */
+/* house skin for zen + nebula: night glass, a pastel blue pick, iosevka aile */
 
 :root {
-  --house-ground: rgb(14 23 25);
+  --house-ground: rgb(16 20 30);
   --house-edge: rgb(255 255 255 / 13%);
-  --house-body: #d5ece9;
-  --house-pick: #7de8da;
-  --house-dim: #4c8581;
+  --house-body: #e2e8f4;
+  --house-pick: #a9c7ff;
+  --house-dim: #7f8aa3;
   --house-band: rgb(255 255 255 / 9%);
+  --house-face: "Iosevka Aile", sans-serif;
 
   --var-nebula-glass-blur: 28px;
   --var-nebula-glass-saturation: 150%;
-  --var-nebula-color-glass-light: rgb(14 23 25 / 72%);
-  --var-nebula-color-glass-dark: rgb(14 23 25 / 72%);
-  --var-nebula-ui-tint-light: rgb(14 23 25 / 12%);
-  --var-nebula-ui-tint-dark: rgb(14 23 25 / 12%);
+  --var-nebula-color-glass-light: rgb(16 20 30 / 72%);
+  --var-nebula-color-glass-dark: rgb(16 20 30 / 72%);
+  --var-nebula-ui-tint-light: rgb(16 20 30 / 12%);
+  --var-nebula-ui-tint-dark: rgb(16 20 30 / 12%);
   --var-nebula-website-tint-light: rgb(0 0 0 / 0%);
   --var-nebula-website-tint-dark: rgb(0 0 0 / 0%);
   --var-nebula-tabs-minimum-light: rgb(255 255 255 / 4%);
@@ -22,8 +23,8 @@
   --var-nebula-tabs-default-dark: rgb(255 255 255 / 6%);
   --var-nebula-tabs-hover-light: rgb(255 255 255 / 9%);
   --var-nebula-tabs-hover-dark: rgb(255 255 255 / 9%);
-  --var-nebula-tabs-selected-light: rgb(125 232 218 / 14%);
-  --var-nebula-tabs-selected-dark: rgb(125 232 218 / 14%);
+  --var-nebula-tabs-selected-light: rgb(169 199 255 / 15%);
+  --var-nebula-tabs-selected-dark: rgb(169 199 255 / 15%);
   --var-nebula-color-shadow-light: rgb(0 0 0 / 35%);
   --var-nebula-color-shadow-dark: rgb(0 0 0 / 35%);
   --var-nebula-border-radius: 12px;
@@ -31,11 +32,21 @@
   --var-nebula-workspace-grayscale: 100%;
 
   --zen-primary-color: var(--house-pick) !important;
-  --zen-main-browser-background: rgb(14 23 25 / 74%) !important;
-  --zen-main-browser-background-toolbar: rgb(14 23 25 / 74%) !important;
-  --zen-themed-toolbar-bg-transparent: rgb(14 23 25 / 74%) !important;
+  --zen-main-browser-background: rgb(16 20 30 / 74%) !important;
+  --zen-main-browser-background-toolbar: rgb(16 20 30 / 74%) !important;
+  --zen-themed-toolbar-bg-transparent: rgb(16 20 30 / 74%) !important;
   --toolbarbutton-icon-fill: var(--house-body) !important;
   --toolbar-color: var(--house-body) !important;
+}
+
+/* the face: the browser's own text, never the pages */
+:root,
+#urlbar-input,
+.urlbarView,
+.tab-label,
+menupopup,
+panel {
+  font-family: var(--house-face) !important;
 }
 
 .tabbrowser-tab .tab-label {
@@ -44,30 +55,31 @@
 
 .tabbrowser-tab:is([selected="true"], [visuallyselected="true"]) .tab-label {
   color: var(--house-pick) !important;
+  font-weight: 500 !important;
 }
 
 .tabbrowser-tab:is([selected="true"], [visuallyselected="true"]) .tab-background {
-  outline: 1px solid rgb(125 232 218 / 22%) !important;
+  outline: 1px solid rgb(169 199 255 / 24%) !important;
   outline-offset: -1px;
 }
 
-/* the url bar: ground glass, an edge, mint when it's yours */
+/* the url bar: ground glass, an edge, blue when it's yours */
 #urlbar .urlbar-background {
-  background-color: rgb(14 23 25 / 55%) !important;
+  background-color: rgb(16 20 30 / 55%) !important;
   border: 1px solid var(--house-edge) !important;
 }
 
 #urlbar[focused] .urlbar-background,
 #urlbar[open] .urlbar-background {
-  border-color: rgb(125 232 218 / 45%) !important;
+  border-color: rgb(169 199 255 / 45%) !important;
 }
 
 #urlbar[open] .urlbar-background {
-  background: rgb(14 23 25 / 70%) !important;
+  background: rgb(16 20 30 / 70%) !important;
 }
 
 #Nebula-urlbar-background {
-  background-color: rgb(14 23 25 / 88%) !important;
+  background-color: rgb(16 20 30 / 88%) !important;
 }
 
 #urlbar-input {
@@ -75,7 +87,7 @@
 }
 
 .urlbarView-row[selected] {
-  background-color: rgb(125 232 218 / 14%) !important;
+  background-color: rgb(169 199 255 / 15%) !important;
 }
 
 .urlbarView-row[selected] .urlbarView-title {
@@ -96,13 +108,13 @@
 }
 
 ::selection {
-  background-color: rgb(125 232 218 / 30%) !important;
+  background-color: rgb(169 199 255 / 30%) !important;
 }
 
-/* zen writes its space colour inline on these layers; paint over it with the desk's ground */
+/* zen writes its space colour inline on these layers; paint over it with night blue */
 .zen-browser-generic-background::after,
 .zen-browser-generic-background::before {
-  background: linear-gradient(165deg, rgb(22 44 46 / 60%), rgb(12 19 21 / 64%) 55%, rgb(10 15 17 / 68%)) !important;
+  background: linear-gradient(165deg, rgb(34 44 70 / 60%), rgb(17 21 32 / 64%) 55%, rgb(11 13 20 / 68%)) !important;
 }
 
 /* no logo */
