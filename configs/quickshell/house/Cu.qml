@@ -161,10 +161,15 @@ Scope {
         active: root.here
 
         PanelWindow {
-            implicitWidth: card.width
-            implicitHeight: card.height
+            property real shrink: 0.5
+            implicitWidth: card.width * shrink
+            implicitHeight: card.height * shrink
             color: "transparent"
             exclusionMode: ExclusionMode.Ignore
+            anchors.left: true
+            anchors.bottom: true
+            margins.left: 14
+            margins.bottom: 14
 
             WlrLayershell.layer: WlrLayer.Bottom
             WlrLayershell.namespace: "cu"
@@ -173,29 +178,20 @@ Scope {
             Rectangle {
                 id: card
                 width: 868
-                height: 404
+                height: 348
+                scale: parent.shrink
+                transformOrigin: Item.TopLeft
                 radius: Theme.radius
                 color: Theme.ground
                 border.color: Theme.edge
                 border.width: 1
 
-                Text {
-                    id: name
-                    x: 28
-                    y: 20
-                    text: "cu · claude"
-                    color: Theme.pick
-                    font.family: Theme.mono
-                    font.pixelSize: 14
-                    font.bold: true
-                    font.letterSpacing: 0.6
-                }
-
                 Row {
                     anchors.right: parent.right
                     anchors.rightMargin: 28
-                    anchors.verticalCenter: name.verticalCenter
+                    y: 14
                     spacing: 7
+                    visible: root.sick
 
                     Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
@@ -216,7 +212,7 @@ Scope {
                 Item {
                     id: gauge
                     x: 28
-                    y: 56
+                    y: 20
                     width: 320 * k
                     height: 268 * k
 
@@ -410,32 +406,6 @@ Scope {
                         paced: true
                         w: root.d !== null ? root.d.fable : null
                         now: root.d !== null ? root.d.ts : 0
-                    }
-                }
-
-                Row {
-                    x: 28
-                    anchors.bottom: parent.bottom
-                    anchors.bottomMargin: 18
-                    spacing: 12
-                    visible: root.d !== null && root.d.today !== undefined
-
-                    Text {
-                        text: "today"
-                        color: Theme.dim
-                        font.family: Theme.mono
-                        font.pixelSize: 11
-                        font.letterSpacing: 1.6
-                        font.capitalization: Font.AllUppercase
-                        anchors.baseline: totals.baseline
-                    }
-
-                    Text {
-                        id: totals
-                        text: parent.visible ? root.brief(root.d.today.in) + " in · " + root.brief(root.d.today.out) + " out" : ""
-                        color: Theme.body
-                        font.family: Theme.mono
-                        font.pixelSize: 13
                     }
                 }
             }
