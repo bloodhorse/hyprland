@@ -12,9 +12,13 @@
 # matters across a monitor seam. Revisit if a second screen ever lands.
 
 import json
+import os
 import re
 import subprocess
 import sys
+import time
+
+LAUNCH_GRACE = 5.0
 
 
 def hyprctl_json(cmd):
@@ -30,6 +34,16 @@ def main():
     clients = [c for c in (hyprctl_json("clients") or [])
                if re.search(cls_re, c.get("class", ""))]
     if not clients:
+        # A slow starter (zen: 1.1 s) has no window yet; a second press in that gap
+        # would launch again and the running instance answers with a second window.
+        stamp = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"),
+                             "focus-or-launch." + re.sub(r"\W", "_", cls_re))
+        try:
+            if time.time() - os.path.getmtime(stamp) < LAUNCH_GRACE:
+                return
+        except OSError:
+            pass
+        open(stamp, "w").close()
         subprocess.Popen(cmd, start_new_session=True,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return
