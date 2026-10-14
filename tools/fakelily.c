@@ -10,6 +10,7 @@ static struct { const char *n; int c; } T[] = {
     {"q",KEY_Q},{"w",KEY_W},{"e",KEY_E},{"r",KEY_R},{"t",KEY_T},{"y",KEY_Y},{"u",KEY_U},{"i",KEY_I},{"o",KEY_O},{"p",KEY_P},
     {"a",KEY_A},{"s",KEY_S},{"d",KEY_D},{"f",KEY_F},{"g",KEY_G},{"h",KEY_H},{"j",KEY_J},{"k",KEY_K},{"l",KEY_L},{"semicolon",KEY_SEMICOLON},
     {"z",KEY_Z},{"x",KEY_X},{"c",KEY_C},{"v",KEY_V},{"b",KEY_B},{"n",KEY_N},{"m",KEY_M},{"comma",KEY_COMMA},{"dot",KEY_DOT},{"slash",KEY_SLASH},
+    {"minus",KEY_MINUS},{"equal",KEY_EQUAL},{"apostrophe",KEY_APOSTROPHE},
     {"tab",KEY_TAB},{"space",KEY_SPACE},{"enter",KEY_ENTER},{"backspace",KEY_BACKSPACE},{"delete",KEY_DELETE},
     {"left",KEY_LEFT},{"right",KEY_RIGHT},{"up",KEY_UP},{"down",KEY_DOWN},
     {"alt",KEY_LEFTALT},{"ralt",KEY_RIGHTALT},{"cmd",KEY_LEFTMETA},{"rcmd",KEY_RIGHTMETA},{"ctrl",KEY_LEFTCTRL},{"lshift",KEY_LEFTSHIFT},{"rshift",KEY_RIGHTSHIFT},
