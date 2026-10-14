@@ -1,0 +1,111 @@
+/* house skin for zen + nebula: the desk's palette.json (ground, edge, body, pick, dim, band) */
+
+:root {
+  --house-ground: rgb(14 23 25);
+  --house-edge: rgb(255 255 255 / 13%);
+  --house-body: #d5ece9;
+  --house-pick: #7de8da;
+  --house-dim: #4c8581;
+  --house-band: rgb(255 255 255 / 9%);
+
+  --var-nebula-glass-blur: 28px;
+  --var-nebula-glass-saturation: 150%;
+  --var-nebula-color-glass-light: rgb(14 23 25 / 72%);
+  --var-nebula-color-glass-dark: rgb(14 23 25 / 72%);
+  --var-nebula-ui-tint-light: rgb(14 23 25 / 12%);
+  --var-nebula-ui-tint-dark: rgb(14 23 25 / 12%);
+  --var-nebula-website-tint-light: rgb(0 0 0 / 0%);
+  --var-nebula-website-tint-dark: rgb(0 0 0 / 0%);
+  --var-nebula-tabs-minimum-light: rgb(255 255 255 / 4%);
+  --var-nebula-tabs-minimum-dark: rgb(255 255 255 / 4%);
+  --var-nebula-tabs-default-light: rgb(255 255 255 / 6%);
+  --var-nebula-tabs-default-dark: rgb(255 255 255 / 6%);
+  --var-nebula-tabs-hover-light: rgb(255 255 255 / 9%);
+  --var-nebula-tabs-hover-dark: rgb(255 255 255 / 9%);
+  --var-nebula-tabs-selected-light: rgb(125 232 218 / 14%);
+  --var-nebula-tabs-selected-dark: rgb(125 232 218 / 14%);
+  --var-nebula-color-shadow-light: rgb(0 0 0 / 35%);
+  --var-nebula-color-shadow-dark: rgb(0 0 0 / 35%);
+  --var-nebula-border-radius: 12px;
+  --var-nebula-essentials-width: 60px;
+  --var-nebula-workspace-grayscale: 100%;
+
+  --zen-primary-color: var(--house-pick) !important;
+  --zen-main-browser-background: rgb(14 23 25 / 74%) !important;
+  --zen-main-browser-background-toolbar: rgb(14 23 25 / 74%) !important;
+  --zen-themed-toolbar-bg-transparent: rgb(14 23 25 / 74%) !important;
+  --toolbarbutton-icon-fill: var(--house-body) !important;
+  --toolbar-color: var(--house-body) !important;
+}
+
+.tabbrowser-tab .tab-label {
+  color: color-mix(in srgb, var(--house-body) 72%, transparent) !important;
+}
+
+.tabbrowser-tab:is([selected="true"], [visuallyselected="true"]) .tab-label {
+  color: var(--house-pick) !important;
+}
+
+.tabbrowser-tab:is([selected="true"], [visuallyselected="true"]) .tab-background {
+  outline: 1px solid rgb(125 232 218 / 22%) !important;
+  outline-offset: -1px;
+}
+
+/* the url bar: ground glass, an edge, mint when it's yours */
+#urlbar .urlbar-background {
+  background-color: rgb(14 23 25 / 55%) !important;
+  border: 1px solid var(--house-edge) !important;
+}
+
+#urlbar[focused] .urlbar-background,
+#urlbar[open] .urlbar-background {
+  border-color: rgb(125 232 218 / 45%) !important;
+}
+
+#urlbar[open] .urlbar-background {
+  background: rgb(14 23 25 / 70%) !important;
+}
+
+#Nebula-urlbar-background {
+  background-color: rgb(14 23 25 / 88%) !important;
+}
+
+#urlbar-input {
+  caret-color: var(--house-pick) !important;
+}
+
+.urlbarView-row[selected] {
+  background-color: rgb(125 232 218 / 14%) !important;
+}
+
+.urlbarView-row[selected] .urlbarView-title {
+  color: var(--house-pick) !important;
+}
+
+/* the page sits on the glass with the desk's edge */
+#tabbrowser-tabbox .browserStack,
+.browserContainer {
+  border-radius: 12px !important;
+}
+
+#zen-tabbox-wrapper,
+.browserSidebarContainer {
+  outline: 1px solid var(--house-edge);
+  outline-offset: -1px;
+  border-radius: 12px;
+}
+
+::selection {
+  background-color: rgb(125 232 218 / 30%) !important;
+}
+
+/* zen writes its space colour inline on these layers; paint over it with the desk's ground */
+.zen-browser-generic-background::after,
+.zen-browser-generic-background::before {
+  background: linear-gradient(165deg, rgb(22 44 46 / 60%), rgb(12 19 21 / 64%) 55%, rgb(10 15 17 / 68%)) !important;
+}
+
+/* no logo */
+#PanelUI-menu-button {
+  display: none !important;
+}
