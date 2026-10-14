@@ -10,6 +10,7 @@ Scope {
     property int pick: 0
     property bool open: false
     property bool harm: false
+    property bool settling: false
     readonly property real rowH: 36.6
     readonly property real top: harm ? Theme.head : 9
     readonly property var crowd: {
@@ -28,22 +29,48 @@ Scope {
 
     TextMetrics { id: monoM; font.family: Theme.mono; font.pointSize: Theme.size; text: "M" }
 
+    readonly property var spaces: ["minus", "equal", "f13", "f14", "f15", "f16", "f17", "section"]
+
+    function rank(ws) {
+        var name = ws.name
+        if (ws.id < 0) return 100000
+        if (name === "esc") return 0
+        if (name === "kitty") return 1
+        if (/^[0-9]+$/.test(name)) return 1 + parseInt(name)
+        var at = spaces.indexOf(name)
+        return 1000 + (at >= 0 ? at : 99000)
+    }
+
     function fill(text) {
         var all = []
         try { all = JSON.parse(text) } catch (e) {}
         var out = all.filter(c => c.mapped !== false && c.class && c.class !== "dropterm")
-        out.sort((a, b) => a.focusHistoryID - b.focusHistoryID)
-        if (!harm && out.length > 1 && out[0].focusHistoryID === 0) out.push(out.shift())
+        out.forEach((c, i) => c.filed = i)
+        out.sort((a, b) => rank(a.workspace) - rank(b.workspace) || a.filed - b.filed)
         wins = out.slice(0, 9)
         if (!wins.length) {
             hide()
             return
+        }
+        if (!open && !harm) {
+            var prev = wins.findIndex(c => c.focusHistoryID === 1)
+            pick = prev >= 0 ? prev : 0
         }
         if (pick >= wins.length) pick = wins.length - 1
         if (!open) {
             open = true
             Hyprland.dispatch("submap picker")
         }
+        if (settling) {
+            settling = false
+            act(pick)
+        }
+    }
+
+    function settle() {
+        if (harm) return
+        if (open) act(pick)
+        else if (fetch.running) settling = true
     }
 
     function call(kill) {
@@ -53,6 +80,7 @@ Scope {
         }
         harm = kill
         pick = 0
+        settling = false
         fetch.running = true
     }
 
@@ -143,6 +171,10 @@ Scope {
                     root.act(root.pick)
                 }
                 event.accepted = true
+            }
+
+            Keys.onReleased: event => {
+                if (event.key === Qt.Key_Meta || event.key === Qt.Key_Super_L) root.settle()
             }
 
             Text {

@@ -59,6 +59,8 @@ int main(int argc, char **argv) {
         if (!strcmp(argv[a], "click")) { click(); continue; }
         if (!strcmp(argv[a], "click2")) { click(); click(); usleep(150000); continue; }
         if (!strncmp(argv[a], "wait:", 5)) { usleep(atoi(argv[a] + 5) * 1000); continue; }
+        if (!strncmp(argv[a], "down:", 5)) { key(code(argv[a] + 5), 1); continue; }
+        if (!strncmp(argv[a], "up:", 3)) { key(code(argv[a] + 3), 0); continue; }
         int ks[8], n = 0;
         char *dup = strdup(argv[a]);
         for (char *p = strtok(dup, "+"); p && n < 8; p = strtok(0, "+")) ks[n++] = code(p);

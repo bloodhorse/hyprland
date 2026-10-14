@@ -126,6 +126,12 @@ Scope {
         editText.forceActiveFocus()
     }
 
+    function back() {
+        editing = false
+        open = true
+        input.forceActiveFocus()
+    }
+
     FileView {
         id: store
         path: root.home + "/.local/state/clip/clips.jsonl"
@@ -335,7 +341,7 @@ Scope {
 
                     Keys.onPressed: event => {
                         if (event.key === Qt.Key_Escape) {
-                            root.hide()
+                            root.back()
                             event.accepted = true
                         } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
                                    && (event.modifiers & Qt.ControlModifier)) {
