@@ -1,5 +1,13 @@
 #!/bin/sh
-pid=$(hyprctl activewindow -j | jq -r ".pid // empty")
+# quit [--window]: end the focused app (cmd+q), or with --window close one window (k).
+# zen never ends: it is hidden on special:zen and N brings it back (zen-lane).
+w=$(hyprctl activewindow -j)
+if [ "$(printf '%s' "$w" | jq -r '.class // empty')" = zen ]; then
+  hyprctl dispatch movetoworkspacesilent special:zen >/dev/null
+  exit 0
+fi
+[ "$1" = --window ] && exec hyprctl dispatch killactive >/dev/null
+pid=$(printf '%s' "$w" | jq -r ".pid // empty")
 case "$pid" in ""|*[!0-9]*) exit 0 ;; esac
 [ "$pid" -gt 1 ] || exit 0
 kill -0 "$pid" 2>/dev/null || exit 0

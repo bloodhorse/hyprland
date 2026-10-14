@@ -1,0 +1,18 @@
+#!/bin/sh
+# zen-lane: N for a zen that never quits (docs: hypragain/docs/zen.md, "Resident").
+#   no zen window      → launch it (focus-or-launch keeps the double-press guard)
+#   focused, right here → hide it on special:zen, alive
+#   anywhere else       → bring it to this workspace and focus it
+w=$(hyprctl clients -j | jq -r '[.[] | select(.class == "zen")][0] // empty | "\(.address) \(.workspace.name)"')
+[ -n "$w" ] || exec "$(dirname "$0")/focus-or-launch" '^zen$' zen-browser
+
+addr=${w%% *}; wsname=${w#* }
+here=$(hyprctl activeworkspace -j | jq -r .id)
+active=$(hyprctl activewindow -j | jq -r '.address // empty')
+
+if [ "$active" = "$addr" ] && [ "${wsname#special:}" = "$wsname" ]; then
+  hyprctl dispatch movetoworkspacesilent "special:zen,address:$addr" >/dev/null
+else
+  hyprctl dispatch movetoworkspacesilent "$here,address:$addr" >/dev/null
+  hyprctl dispatch focuswindow "address:$addr" >/dev/null
+fi
