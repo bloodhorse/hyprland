@@ -1,0 +1,14 @@
+#!/bin/bash
+# The profi key into the mini's ssh-agent, its passphrase from the keyring (_kc PROFI_KEY_PASS).
+# ssh runs it through `Match … exec` before every profi host, so the first c/p9 of a login
+# loads the key and the rest find it there. With an argument it is ssh-add's askpass.
+# Always exits 0: if the load fails, ssh falls back to asking for the passphrase itself.
+
+[ $# -gt 0 ] && exec "$(dirname "$(readlink -f "$0")")/_kc" PROFI_KEY_PASS
+
+export SSH_AUTH_SOCK=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/ssh-agent.socket
+key=/Users/bekh/wrk/keys/ssh_keys/bekh_profi.key
+fp=$(ssh-keygen -lf "$key" 2>/dev/null | awk '{print $2}')
+ssh-add -l 2>/dev/null | grep -qF "$fp" && exit 0
+SSH_ASKPASS=$(readlink -f "$0") SSH_ASKPASS_REQUIRE=force ssh-add -q "$key" </dev/null >/dev/null 2>&1
+exit 0
