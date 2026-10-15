@@ -1,0 +1,12 @@
+#!/bin/bash
+# x <host> [cmd…]: a shell on a corp box, through the mac. The mac holds the VPN and the work
+# key; the key never comes to the mini. A short name gets .x340.org, as on the mac.
+
+[ $# -ge 1 ] || { echo "usage: x <host> [cmd…]" >&2; exit 2; }
+host=$1; shift
+[[ $host == *.* ]] || host=$host.x340.org
+
+remote="ssh -t -i /Users/bekh/wrk/keys/ssh_keys/bekh_profi.key BekmemetevVO@$host"
+[ $# -gt 0 ] && remote+=" $(printf '%q' "$(printf '%q ' "$@")")"
+
+exec ssh -t mac "$remote"
