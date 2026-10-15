@@ -1,9 +1,10 @@
 #!/bin/sh
 # quit [--window|--hard]: cmd+q ends the focused app; --window (k) closes one window;
 # --hard (cmd+shift+q) ends it whatever it is.
-# Two apps never end on cmd+q, the window just goes (hypragain/docs/cmd-q.md):
+# Three apps never end on cmd+q, the window just goes (hypragain/docs/cmd-q.md):
 #   zen   → hidden alive on special:zen, N brings it back (zen-lane); k hides it too
 #   kitty → every kitty window to special:kitty, its shells alive; W and g bring them back
+#   bare  → every bare window to special:com.bekh.bare, its tabs alive; S brings them back
 w=$(hyprctl activewindow -j)
 cls=$(printf '%s' "$w" | jq -r '.class // empty')
 
@@ -12,10 +13,10 @@ if [ "$1" != --hard ]; then
     zen)
       hyprctl dispatch movetoworkspacesilent special:zen >/dev/null
       exit 0 ;;
-    kitty)
+    kitty|com.bekh.bare)
       if [ "$1" != --window ]; then
-        for a in $(hyprctl clients -j | jq -r '.[] | select(.class == "kitty") | .address'); do
-          hyprctl dispatch movetoworkspacesilent "special:kitty,address:$a" >/dev/null
+        for a in $(hyprctl clients -j | jq -r --arg c "$cls" '.[] | select(.class == $c) | .address'); do
+          hyprctl dispatch movetoworkspacesilent "special:$cls,address:$a" >/dev/null
         done
         exit 0
       fi ;;
