@@ -1,6 +1,0 @@
-#!/bin/bash
-# c <host>: a shell on a corp box, through the mac. It runs the mac's own `c` (its DBH map of
-# short names, the work key, the VPN all stay there); the key never comes to the mini.
-
-[ $# -eq 1 ] || { echo "usage: c <host|DBH key>" >&2; exit 2; }
-exec ssh -t mac "zsh -ic $(printf '%q' "c $(printf '%q' "$1")")"
