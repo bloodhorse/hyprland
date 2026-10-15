@@ -1,10 +1,16 @@
 #!/bin/bash
 # dream [on|off]: dreamshit.net's cloudflare tunnel, the mini's one door from the internet.
 # Off means stopped and not started at boot. Bare `dream` prints the state.
+# The work tree and the prod key live on the mini too, so `on` asks first.
 
 u=dreamshit-tunnel.service
 case $1 in
-  on)  sudo systemctl enable --now $u ;;
+  on)
+    if [ -e ~/wrk/profi ] || [ -e ~/wrk/keys ]; then
+      read -rp "the mini holds ~/wrk and the prod key. open it to the internet anyway? [y/N] " a
+      [ "$a" = y ] || { echo "stays off"; exit 1; }
+    fi
+    sudo systemctl enable --now $u ;;
   off) sudo systemctl disable --now $u ;;
   "")  ;;
   *)   echo "usage: dream [on|off]" >&2; exit 2 ;;
