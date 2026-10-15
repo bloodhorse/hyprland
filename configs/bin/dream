@@ -1,0 +1,12 @@
+#!/bin/bash
+# dream [on|off]: dreamshit.net's cloudflare tunnel, the mini's one door from the internet.
+# Off means stopped and not started at boot. Bare `dream` prints the state.
+
+u=dreamshit-tunnel.service
+case $1 in
+  on)  sudo systemctl enable --now $u ;;
+  off) sudo systemctl disable --now $u ;;
+  "")  ;;
+  *)   echo "usage: dream [on|off]" >&2; exit 2 ;;
+esac
+echo "$(systemctl is-active $u), $(systemctl is-enabled $u)"
