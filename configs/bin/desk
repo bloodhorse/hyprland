@@ -6,7 +6,7 @@ out() {
     [ -s "$mark" ] && return
     hyprctl clients -j | jq -r --arg w "$name" '.[] | select(.workspace.name == $w and .mapped) | .address' >"$mark"
     [ -s "$mark" ] || return
-    hyprctl --batch "$(sed 's/.*/dispatch setprop address:& opacity 0 ; dispatch setprop address:& opacity_override 1/' "$mark" | paste -sd ';')" >/dev/null
+    hyprctl --batch "$(sed 's/.*/dispatch setprop address:& opacity 0.01 ; dispatch setprop address:& opacity_override 1/' "$mark" | paste -sd ';')" >/dev/null
 }
 
 back() {
