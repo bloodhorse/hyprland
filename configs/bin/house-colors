@@ -3,6 +3,11 @@ state=~/.local/state/house
 mkdir -p "$state"
 exec 9>"${XDG_RUNTIME_DIR:-/tmp}/house-colors.lock"
 flock 9
+case "$1" in
+off) touch "$state/off"; set -- house ;;
+on) rm -f "$state/off"; set -- "$(awww query | sed 's/.*image: //')" ;;
+esac
+if [ "$1" != house ] && [ -f "$state/off" ]; then exit 0; fi
 if [ "$1" = house ]; then
     cp ~/tower/temper/hyprland/configs/quickshell/house/palette.json "$state/palette.json"
     printf 'general {\n    col.active_border = rgba(cba6f7ee) rgba(89b4faee) 45deg\n    col.inactive_border = rgba(313244aa)\n}\n' >"$state/hypr-colors.conf"
