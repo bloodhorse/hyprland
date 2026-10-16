@@ -10,7 +10,6 @@ Scope {
     property int pick: 0
     property bool open: false
     property bool harm: false
-    property bool settling: false
     readonly property real rowH: 36.6
     readonly property real top: harm ? Theme.head : 9
     readonly property var crowd: {
@@ -61,16 +60,6 @@ Scope {
             open = true
             Hyprland.dispatch("submap picker")
         }
-        if (settling) {
-            settling = false
-            act(pick)
-        }
-    }
-
-    function settle() {
-        if (harm) return
-        if (open) act(pick)
-        else if (fetch.running) settling = true
     }
 
     function call(kill) {
@@ -80,7 +69,6 @@ Scope {
         }
         harm = kill
         pick = 0
-        settling = false
         fetch.running = true
     }
 
@@ -171,10 +159,6 @@ Scope {
                     root.act(root.pick)
                 }
                 event.accepted = true
-            }
-
-            Keys.onReleased: event => {
-                if (event.key === Qt.Key_Meta || event.key === Qt.Key_Super_L) root.settle()
             }
 
             Text {
