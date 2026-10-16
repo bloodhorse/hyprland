@@ -1,25 +1,23 @@
 #!/usr/bin/env bash
-ws=$(hyprctl activeworkspace -j)
-name=$(jq -r .name <<<"$ws")
-[[ $name =~ ^[0-9]+$ ]] && target=$name || target="name:$name"
-stash="special:desk-${name//[^a-zA-Z0-9]/_}"
-here() { hyprctl clients -j | jq -r --arg w "$1" '.[] | select(.workspace.name == $w and .mapped) | .address'; }
+name=$(hyprctl activeworkspace -j | jq -r .name)
+mark="${XDG_RUNTIME_DIR:-/tmp}/desk-${name//[^a-zA-Z0-9]/_}"
 
 out() {
-    here "$name" | while read -r a; do
-        hyprctl dispatch movetoworkspacesilent "$stash,address:$a" >/dev/null
-    done
+    [ -s "$mark" ] && return
+    hyprctl clients -j | jq -r --arg w "$name" '.[] | select(.workspace.name == $w and .mapped) | .address' >"$mark"
+    [ -s "$mark" ] || return
+    hyprctl --batch "$(sed 's/.*/dispatch setprop address:& opacity 0 ; dispatch setprop address:& opacity_override 1/' "$mark" | paste -sd ';')" >/dev/null
 }
 
 back() {
-    here "$stash" | while read -r a; do
-        hyprctl dispatch movetoworkspacesilent "$target,address:$a" >/dev/null
-    done
+    [ -s "$mark" ] || return
+    hyprctl --batch "$(sed 's/.*/dispatch setprop address:& opacity 1 ; dispatch setprop address:& opacity_override unset/' "$mark" | paste -sd ';')" >/dev/null
+    rm -f "$mark"
 }
 
 case "${1:-toggle}" in
 out) out ;;
 in) back ;;
-toggle) [ -n "$(here "$stash")" ] && back || out ;;
+toggle) [ -s "$mark" ] && back || out ;;
 *) echo "desk [toggle|out|in]"; exit 2 ;;
 esac
