@@ -13,6 +13,7 @@ Scope {
     property string tool: Quickshell.env("HOME") + "/.local/bin/wall"
     property string thumbs: Quickshell.env("HOME") + "/.cache/wall-thumbs/"
     property string was: ""
+    property string desk: Quickshell.env("HOME") + "/.local/bin/desk"
 
     IpcHandler {
         target: "wall"
@@ -30,11 +31,13 @@ Scope {
         var path = folderModel.get(view.currentIndex, "filePath")
         if (path) Quickshell.execDetached([tool, path])
         open = false
+        Quickshell.execDetached([desk, "in"])
     }
 
     function cancel() {
         if (moved) Quickshell.execDetached([tool, "revert"])
         open = false
+        Quickshell.execDetached([desk, "in"])
     }
 
     function settle() {

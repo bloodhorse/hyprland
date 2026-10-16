@@ -12,6 +12,7 @@ case "$1" in
 "")
     awww query | sed 's/.*image: //' >"$was"
     ("$0" thumbs >/dev/null 2>&1 &)
+    ~/.local/bin/desk out
     exec qs -c house ipc call wall toggle
     ;;
 thumbs)
