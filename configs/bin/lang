@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+import json
+import subprocess
+
+kbs = json.loads(subprocess.run(["hyprctl", "-j", "devices"], capture_output=True, text=True).stdout)["keyboards"]
+main = next((k for k in kbs if k.get("main")), kbs[0])
+subprocess.run(["hyprctl", "switchxkblayout", "all", "1" if main["active_layout_index"] == 0 else "0"],
+               capture_output=True)
