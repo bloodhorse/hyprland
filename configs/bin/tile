@@ -19,6 +19,18 @@ pop)
         hyprctl --batch "dispatch resizeactive exact 62% 72%; dispatch centerwindow" >/dev/null
     fi
     ;;
+z)
+    a=$(hyprctl activewindow -j)
+    if [ "$(state)" = off ] || [ "$(jq -r .fullscreen <<<"$a")" != 0 ]; then
+        hyprctl dispatch fullscreen 1 >/dev/null
+        exit
+    fi
+    [ "$(jq -r .floating <<<"$a")" = true ] && exec "$0" pop
+    ws=$(jq -r .workspace.id <<<"$a")
+    n=$(hyprctl clients -j | jq --argjson ws "$ws" '[.[] | select(.workspace.id == $ws and .floating == false and .mapped)] | length')
+    [ "$n" -le 1 ] && exec "$0" pop
+    hyprctl dispatch fullscreen 1 >/dev/null
+    ;;
 on)
     ln -sfn "$conf/tile.conf" "$link"
     hyprctl reload >/dev/null
@@ -43,5 +55,5 @@ off)
     echo floating
     ;;
 toggle) [ "$(state)" = on ] && exec "$0" off || exec "$0" on ;;
-*) echo "tile [on|off|state|pop]"; exit 2 ;;
+*) echo "tile [on|off|state|pop|z]"; exit 2 ;;
 esac
