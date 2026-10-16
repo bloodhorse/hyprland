@@ -6,4 +6,5 @@ ShellRoot {
     Pick {}
     Wall {}
     Cu {}
+    Signs {}
 }
