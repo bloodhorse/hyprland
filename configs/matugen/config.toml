@@ -1,0 +1,15 @@
+[config]
+
+[templates.house]
+input_path = "/Users/bekh/tower/temper/hyprland/configs/matugen/templates/palette.json"
+output_path = "/Users/bekh/.local/state/house/palette.json"
+
+[templates.hypr]
+input_path = "/Users/bekh/tower/temper/hyprland/configs/matugen/templates/hypr.conf"
+output_path = "/Users/bekh/.local/state/house/hypr-colors.conf"
+post_hook = "hyprctl --batch 'keyword general:col.active_border rgba({{colors.primary.default.hex_stripped}}ee) rgba({{colors.tertiary.default.hex_stripped}}ee) 45deg ; keyword general:col.inactive_border rgba(00000000)' >/dev/null"
+
+[templates.kitty]
+input_path = "/Users/bekh/tower/temper/hyprland/configs/matugen/templates/kitty.conf"
+output_path = "/Users/bekh/.local/state/house/kitty-colors.conf"
+post_hook = "for s in /tmp/kitty-*; do kitty @ --to unix:$s set-colors -a -c /Users/bekh/.local/state/house/kitty-colors.conf >/dev/null 2>&1; done"

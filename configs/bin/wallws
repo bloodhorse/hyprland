@@ -31,6 +31,8 @@ def show(name):
     subprocess.run(["awww", "img", path, "--transition-type", "fade",
                     "--transition-duration", "0.35", "--transition-fps", "60"],
                    capture_output=True)
+    subprocess.Popen([os.path.expanduser("~/.local/bin/house-colors"), path],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def listen():

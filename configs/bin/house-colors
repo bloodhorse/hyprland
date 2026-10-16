@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+state=~/.local/state/house
+mkdir -p "$state"
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/house-colors.lock"
+flock 9
+if [ "$1" = house ]; then
+    cp ~/tower/temper/hyprland/configs/quickshell/house/palette.json "$state/palette.json"
+    printf 'general {\n    col.active_border = rgba(cba6f7ee) rgba(89b4faee) 45deg\n    col.inactive_border = rgba(313244aa)\n}\n' >"$state/hypr-colors.conf"
+    hyprctl --batch "keyword general:col.active_border rgba(cba6f7ee) rgba(89b4faee) 45deg ; keyword general:col.inactive_border rgba(313244aa)" >/dev/null
+    for s in /tmp/kitty-*; do kitty @ --to "unix:$s" set-colors -a --reset >/dev/null 2>&1; done
+    exit
+fi
+[ -f "$1" ] || exit 1
+matugen -c ~/tower/temper/hyprland/configs/matugen/config.toml -m dark --prefer saturation image "$1" -q

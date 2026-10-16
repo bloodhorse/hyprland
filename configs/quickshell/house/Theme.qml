@@ -22,7 +22,7 @@ Singleton {
     readonly property real head: 56
 
     FileView {
-        path: Quickshell.shellPath("palette.json")
+        path: Quickshell.env("HOME") + "/.local/state/house/palette.json"
         blockLoading: true
         watchChanges: true
         onFileChanged: reload()
@@ -32,12 +32,12 @@ Singleton {
             property string font: "SF Mono"
             property real size: 12.75
             property int radius: 12
-            property string ground: "#0E1719C4"
-            property string edge: "#FFFFFF22"
-            property string body: "#D5ECE9"
+            property string ground: "#FFFFFF0F"
+            property string edge: "#FFFFFF33"
+            property string body: "#FFFFFFE0"
             property string pick: "#7DE8DA"
-            property string dim: "#4C8581"
-            property string band: "#FFFFFF16"
+            property string dim: "#FFFFFF80"
+            property string band: "#3CF2F238"
             property string harm: "#FF6EC7"
             property string warn: "#C58AB5"
         }

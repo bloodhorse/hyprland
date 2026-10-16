@@ -1,0 +1,13 @@
+{
+  "font": "SF Mono",
+  "size": 12.75,
+  "radius": 12,
+  "ground": "{{colors.surface.default.hex}}59",
+  "edge": "{{colors.outline_variant.default.hex}}80",
+  "body": "{{colors.on_surface.default.hex}}",
+  "pick": "{{colors.primary.default.hex}}",
+  "dim": "{{colors.on_surface_variant.default.hex}}",
+  "band": "{{colors.primary.default.hex}}38",
+  "harm": "{{colors.error.default.hex}}",
+  "warn": "{{colors.tertiary.default.hex}}"
+}
