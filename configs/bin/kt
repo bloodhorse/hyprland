@@ -1,0 +1,34 @@
+#!/bin/bash
+# kt — kitty light/dark on the mini, the local toggle under tt (the mac's kt is
+# its own script). Usage: kt / kt light / kt dark
+#
+# The colours live in a per-box file, ~/.local/state/house/kitty-theme.conf,
+# which linux.conf includes: the kitty folder is synced with the mac, so
+# writing its current-theme.conf here would flip the mac's kitty too.
+# Dark is Catppuccin Mocha with the house colours on top (house-colors writes
+# kitty-colors.conf); light is Catppuccin Latte. Running kittys are pushed over
+# their sockets, the same as the mac's kt.
+state=~/.local/state/house
+out=$state/kitty-theme.conf
+themes=~/tower/forge/kitty/themes
+mkdir -p "$state"
+
+cur=$(cat "$state/kitty-mode" 2>/dev/null || echo dark)
+case "${1:-toggle}" in
+  light|dark) next=$1 ;;
+  toggle) [ "$cur" = light ] && next=dark || next=light ;;
+  *) echo "usage: kt [light|dark]" >&2; exit 1 ;;
+esac
+
+if [ "$next" = light ]; then
+  cat "$themes/Catppuccin-Latte.conf" > "$out.tmp"
+else
+  cat "$themes/Catppuccin-Mocha.conf" "$state/kitty-colors.conf" > "$out.tmp" 2>/dev/null
+fi
+mv "$out.tmp" "$out"
+echo "$next" > "$state/kitty-mode"
+
+for sock in /tmp/kitty-[0-9]*; do
+  [ -S "$sock" ] && kitten @ --to "unix:$sock" set-colors --all --configured "$out" 2>/dev/null
+done
+echo "kitty theme: $next"

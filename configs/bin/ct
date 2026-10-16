@@ -1,0 +1,57 @@
+#!/bin/zsh -f
+# ct — Claude Code light/dark theme toggle. Third sibling of kt (kitty) and
+# wt (wezterm); tt is the master that pushes the system mode into all three.
+# Usage: ct          — toggle
+#        ct light    — force light
+#        ct dark     — force dark
+#
+# -f in the shebang, same reason as kt/wt: a non-interactive zsh still sources
+# ~/.zshenv and walks the keychain for tokens this script never uses.
+#
+# Why this exists at all: Claude Code's `theme: auto` does NOT read the macOS
+# appearance. It asks the terminal for its background colour over OSC 11 and
+# guesses from the luminance — and when that query goes unanswered it falls back
+# to the stale COLORFGBG env var, then to plain "dark". That's how you end up
+# with a light palette painted on a dark terminal, i.e. text invisible against
+# the background. So we set the theme absolutely and never let it guess.
+#
+# Daltonized variants on purpose — that's the pair bekh actually uses.
+LIGHT_THEME=light-daltonized
+DARK_THEME=dark-daltonized
+F="$HOME/.claude/settings.json"
+
+JQ=${commands[jq]:-/opt/homebrew/bin/jq}  # /usr/bin/jq on the mini
+[[ -r $F ]] || { echo "no settings: $F" >&2; exit 1 }
+
+# Current mode is read back out of settings.json itself — no separate state file
+# to drift away from the thing it claims to describe.
+cur=$("$JQ" -r '.theme // ""' "$F" 2>/dev/null)
+[[ $cur == light* ]] && cur=light || cur=dark
+
+case "${1:-toggle}" in
+  light|dark) next=$1 ;;
+  toggle) [[ $cur == light ]] && next=dark || next=light ;;
+  *) echo "usage: ct [light|dark]" >&2; exit 1 ;;
+esac
+
+[[ $next == light ]] && theme=$LIGHT_THEME || theme=$DARK_THEME
+
+# Surgical line rewrite instead of a jq round-trip: jq would reformat the entire
+# 200-line settings file on every theme flip, burying a one-word change in noise.
+# The 'theme' key is top level, so anchoring on the exact key is unambiguous.
+tmp=$(mktemp "${TMPDIR:-/tmp}/ct.XXXXXX") || exit 1
+trap 'rm -f "$tmp"' EXIT
+
+sed -E "s|^([[:space:]]*\"theme\"[[:space:]]*:[[:space:]]*)\"[^\"]*\"|\1\"$theme\"|" "$F" > "$tmp"
+# Key absent (fresh config) → fall back to jq, which has to insert it.
+if ! grep -q "\"theme\"" "$tmp"; then
+  "$JQ" --indent 2 --arg t "$theme" '.theme = $t' "$F" > "$tmp" || exit 1
+fi
+
+# Never move a file Claude Code failed to parse into place: it reads this on
+# every session start and a broken one costs you the whole config, not the theme.
+"$JQ" -e . "$tmp" >/dev/null 2>&1 || { echo "ct: refusing to write invalid json" >&2; exit 1 }
+mv "$tmp" "$F"
+trap - EXIT
+
+echo "claude theme: $next"
