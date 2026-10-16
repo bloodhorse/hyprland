@@ -87,8 +87,8 @@ Scope {
                 anchors.fill: parent
                 opacity: root.breath
                 readonly property real depth: 24
-                readonly property color glow: "#8fd9b8"
-                readonly property color none: "#008fd9b8"
+                readonly property color glow: "#40E0D0"
+                readonly property color none: "#0040E0D0"
 
                 Rectangle {
                     anchors { top: parent.top; left: parent.left; right: parent.right }
