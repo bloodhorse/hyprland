@@ -1,17 +1,35 @@
 #!/usr/bin/env bash
-if [ -z "$1" ]; then
+dir=~/Pictures/Wallpapers
+thumbs=~/.cache/wall-thumbs
+was=${XDG_RUNTIME_DIR:-/tmp}/wall-was
+
+show() {
+    awww img "$1" --transition-type fade --transition-duration "${2:-0.5}" --transition-fps 60
+    (~/.local/bin/house-colors "$1" >/dev/null 2>&1 &)
+}
+
+case "$1" in
+"")
+    awww query | sed 's/.*image: //' >"$was"
+    ("$0" thumbs >/dev/null 2>&1 &)
     exec qs -c house ipc call wall toggle
-fi
-kinds=(grow wave outer center wipe fade left right top bottom)
-spots=(center top-left top-right bottom-left bottom-right)
-awww img "$1" \
-    --transition-type "${kinds[RANDOM % ${#kinds[@]}]}" \
-    --transition-angle $((RANDOM % 8 * 45)) \
-    --transition-pos "${spots[RANDOM % ${#spots[@]}]}" \
-    --transition-step 140 \
-    --transition-fps 120
-ws=$(hyprctl activeworkspace -j | jq -r .name)
-map=~/.local/state/wallws.json
-[ -f "$map" ] || echo '{}' >"$map"
-jq --arg ws "$ws" --arg p "$1" '.[$ws] = $p' "$map" >"$map.new" && mv "$map.new" "$map"
-(~/.local/bin/house-colors "$1" >/dev/null 2>&1 &)
+    ;;
+thumbs)
+    mkdir -p "$thumbs"
+    for f in "$dir"/*; do
+        t="$thumbs/$(basename "$f").jpg"
+        [ -f "$f" ] && [ ! "$t" -nt "$f" ] && magick "$f[0]" -auto-orient -thumbnail x480 -quality 85 "$t"
+    done
+    ;;
+preview) show "$2" 0.3 ;;
+revert) [ -s "$was" ] && show "$(cat "$was")" 0.3 ;;
+*)
+    [ -f "$1" ] || exit 1
+    show "$1"
+    ws=$(hyprctl activeworkspace -j | jq -r .name)
+    map=~/.local/state/wallws.json
+    [ -f "$map" ] || echo '{}' >"$map"
+    cp "$map" "$map.bak"
+    jq --arg ws "$ws" --arg p "$1" '.[$ws] = $p' "$map" >"$map.new" && mv "$map.new" "$map"
+    ;;
+esac
