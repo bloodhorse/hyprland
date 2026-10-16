@@ -8,6 +8,8 @@ import QtQuick.Shapes
 Scope {
     id: root
     property bool ru: false
+    property bool mode: false
+    property real breath: 0.35
     property real phase: 0
     property real arm: 1
     readonly property real width: 4
@@ -20,8 +22,7 @@ Scope {
                 root.ru = event.data.indexOf("Russian") >= 0
                 root.arm = 1
             } else if (event.name === "submap") {
-                var spin = event.data === "c" ? "loop" : "once"
-                Quickshell.execDetached(["hyprctl", "keyword", "animation", "borderangle,1,30,linear," + spin])
+                root.mode = event.data === "c"
             }
         }
     }
@@ -56,6 +57,75 @@ Scope {
         respectInhibitors: false
         timeout: 30
         onIsIdleChanged: if (isIdle) Quickshell.execDetached(["hyprctl", "switchxkblayout", "all", "0"])
+    }
+
+    SequentialAnimation on breath {
+        running: root.mode
+        loops: Animation.Infinite
+        NumberAnimation { to: 0.6; duration: 1000; easing.type: Easing.InOutSine }
+        NumberAnimation { to: 0.35; duration: 1000; easing.type: Easing.InOutSine }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        PanelWindow {
+            required property var modelData
+            screen: modelData
+            visible: root.mode
+            anchors { top: true; bottom: true; left: true; right: true }
+            color: "transparent"
+            exclusionMode: ExclusionMode.Ignore
+            mask: Region {}
+
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.namespace: "mode-glow"
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+            Item {
+                id: glowBox
+                anchors.fill: parent
+                opacity: root.breath
+                readonly property real depth: 24
+                readonly property color glow: "#8fd9b8"
+                readonly property color none: "#008fd9b8"
+
+                Rectangle {
+                    anchors { top: parent.top; left: parent.left; right: parent.right }
+                    height: parent.depth
+                    gradient: Gradient {
+                        GradientStop { position: 0; color: glowBox.glow }
+                        GradientStop { position: 1; color: glowBox.none }
+                    }
+                }
+                Rectangle {
+                    anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
+                    height: parent.depth
+                    gradient: Gradient {
+                        GradientStop { position: 0; color: glowBox.none }
+                        GradientStop { position: 1; color: glowBox.glow }
+                    }
+                }
+                Rectangle {
+                    anchors { top: parent.top; bottom: parent.bottom; left: parent.left }
+                    width: parent.depth
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+                        GradientStop { position: 0; color: glowBox.glow }
+                        GradientStop { position: 1; color: glowBox.none }
+                    }
+                }
+                Rectangle {
+                    anchors { top: parent.top; bottom: parent.bottom; right: parent.right }
+                    width: parent.depth
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+                        GradientStop { position: 0; color: glowBox.none }
+                        GradientStop { position: 1; color: glowBox.glow }
+                    }
+                }
+            }
+        }
     }
 
     NumberAnimation {
