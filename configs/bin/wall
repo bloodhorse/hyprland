@@ -10,3 +10,7 @@ awww img "$1" \
     --transition-pos "${spots[RANDOM % ${#spots[@]}]}" \
     --transition-step 140 \
     --transition-fps 120
+ws=$(hyprctl activeworkspace -j | jq -r .name)
+map=~/.local/state/wallws.json
+[ -f "$map" ] || echo '{}' >"$map"
+jq --arg ws "$ws" --arg p "$1" '.[$ws] = $p' "$map" >"$map.new" && mv "$map.new" "$map"
