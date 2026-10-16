@@ -1,13 +1,13 @@
 {
-  "font": "JetBrainsMono Nerd Font",
-  "size": 13,
+  "font": "SF Mono",
+  "size": 12.75,
   "radius": 12,
-  "ground": "#0E1719C4",
-  "edge": "#FFFFFF22",
-  "body": "#D5ECE9",
+  "ground": "#FFFFFF0F",
+  "edge": "#FFFFFF33",
+  "body": "#FFFFFFE0",
   "pick": "#7DE8DA",
-  "dim": "#4C8581",
-  "band": "#FFFFFF16",
+  "dim": "#FFFFFF80",
+  "band": "#3CF2F238",
   "harm": "#FF6EC7",
   "warn": "#C58AB5"
 }

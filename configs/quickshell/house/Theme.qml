@@ -15,11 +15,11 @@ Singleton {
     readonly property color harm: tone(look.harm)
     readonly property color warn: tone(look.warn)
     readonly property string mono: look.font
-    readonly property int size: look.size
+    readonly property real size: look.size
     readonly property int radius: look.radius
-    readonly property int small: 10
-    readonly property real rowH: 36.6
-    readonly property real head: 75.5
+    readonly property real small: 9.75
+    readonly property real rowH: 32
+    readonly property real head: 56
 
     FileView {
         path: Quickshell.shellPath("palette.json")
@@ -29,8 +29,8 @@ Singleton {
 
         JsonAdapter {
             id: look
-            property string font: "JetBrainsMono Nerd Font"
-            property int size: 13
+            property string font: "SF Mono"
+            property real size: 12.75
             property int radius: 12
             property string ground: "#0E1719C4"
             property string edge: "#FFFFFF22"

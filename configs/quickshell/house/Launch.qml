@@ -14,7 +14,7 @@ Scope {
     property var list: []
     property int first: 0
     readonly property int rows: 5
-    readonly property int fit: Math.floor((384 - 62 - 24 - 14 - 5 * smallM.advanceWidth) / monoM.advanceWidth)
+    readonly property int fit: Math.floor((384 - 31 - 14 - 14 - 5 * smallM.advanceWidth) / monoM.advanceWidth)
     readonly property string home: Quickshell.env("HOME")
     readonly property string dictated: home + "/tower/forge/hypragain/dictate/dictated.py"
     readonly property var ownRows: [{ title: "micinput", detail: "dictation", own: "inputs" },
@@ -210,7 +210,7 @@ Scope {
     PanelWindow {
         visible: root.open
         implicitWidth: 384
-        implicitHeight: Theme.head + root.rows * Theme.rowH + 6
+        implicitHeight: Theme.head + root.rows * Theme.rowH + 10
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
@@ -226,8 +226,8 @@ Scope {
             clip: true
 
             Text {
-                x: 30
-                y: 33 - height / 2
+                x: 22
+                y: 31 - height / 2
                 text: ">"
                 color: Theme.dim
                 font.family: Theme.mono
@@ -235,8 +235,8 @@ Scope {
             }
 
             Text {
-                x: 62
-                y: 33 - height / 2
+                x: 46
+                y: 31 - height / 2
                 visible: input.text.length === 0 && root.mode !== ""
                 text: root.mode === "inputs" ? "input" : root.mode
                 color: Theme.dim
@@ -246,8 +246,8 @@ Scope {
 
             Text {
                 anchors.right: parent.right
-                anchors.rightMargin: 24
-                y: 33 - height / 2
+                anchors.rightMargin: 9
+                y: 31 - height / 2
                 text: root.now
                 color: Theme.dim
                 font.family: Theme.mono
@@ -256,9 +256,9 @@ Scope {
 
             TextInput {
                 id: input
-                x: 62
-                y: 33 - height / 2
-                width: parent.width - 62 - 80
+                x: 46
+                y: 31 - height / 2
+                width: parent.width - 46 - 69
                 clip: true
                 focus: true
                 color: Theme.body
@@ -286,10 +286,10 @@ Scope {
 
             Rectangle {
                 visible: root.shown.length > 0
-                x: 5
-                y: Theme.head + (root.pick - root.first) * Theme.rowH + (Theme.rowH - 35.4) / 2
-                width: parent.width - 10
-                height: 35.4
+                x: 0
+                y: Theme.head + (root.pick - root.first) * Theme.rowH
+                width: parent.width
+                height: Theme.rowH
                 color: Theme.band
             }
 
@@ -306,12 +306,12 @@ Scope {
 
                     Text {
                         id: title
-                        x: 62
+                        x: 31
                         anchors.verticalCenter: parent.verticalCenter
-                        width: Math.min(implicitWidth, parent.width - 62 - 24)
+                        width: Math.min(implicitWidth, parent.width - 31 - 14)
                         elide: Text.ElideRight
                         text: row.modelData.title
-                        color: row.index + root.first === root.pick ? Theme.pick : Theme.body
+                        color: Theme.body
                         font.family: Theme.mono
                         font.pointSize: Theme.size
                     }
