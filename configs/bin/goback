@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-if [ "$(hyprctl activewindow -j | jq -r .class)" = com.bekh.bare ]; then
-    wtype -M ctrl -k bracketleft -m ctrl
-else
-    wtype -M alt -k Left -m alt
-fi
+w=$(hyprctl activewindow -j)
+addr=$(jq -r .address <<<"$w")
+case "$(jq -r .class <<<"$w")" in
+com.bekh.bare) hyprctl dispatch sendshortcut "CTRL,bracketleft,address:$addr" >/dev/null ;;
+kitty|dropterm) hyprctl dispatch sendshortcut "CTRL ALT,bracketleft,address:$addr" >/dev/null ;;
+*) hyprctl dispatch sendshortcut "ALT,Left,address:$addr" >/dev/null ;;
+esac
